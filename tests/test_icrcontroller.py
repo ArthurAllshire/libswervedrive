@@ -5,14 +5,13 @@ from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
-import pytest
-
-from .helpers import unlimited_rotation_controller, build_controller
+from .helpers import unlimited_rotation_controller, build_controller, twist_to_icr
 
 from swervedrive.icr.estimator import shortest_distance
 
 
 def cartesian_to_lambda(x, y):
+    """Convert an ICR in R^2 to one in the projective plane."""
     return np.reshape(1 / np.linalg.norm([x, y, 1]) * np.array([x, y, 1]), (3, 1))
 
 
@@ -139,21 +138,21 @@ def test_structural_singularity_command():
 
 def test_bad_s_2dot():
     c = unlimited_rotation_controller(
-        [-0.5, 0.5], [-1e-6, 1e-6], [-1e-6, 1e-6], [-1e-6, 1e-6]
+        [-5, 5], [-20, 20], [-128, 128], [-100, 100]
     )
 
     modules_beta = np.array([[0], [math.pi / 2], [0], [math.pi / 2]])
     modules_phi_dot = np.array([[0]] * 4)
 
-    lmda_d = cartesian_to_lambda(0, 1e20)
-    mu_d = 1.0
-    dt = 0.1
+    lmda_d, mu_d = twist_to_icr(0, 1, 0)
+    dt = 1/10
     beta_prev = modules_beta
     phi_dot_prev = modules_phi_dot
     iterations = 0
-    while iterations < 20:
+    while iterations < 100:
         beta_cmd, phi_dot_cmd, xi_e = c.control_step(
             beta_prev, phi_dot_prev, lmda_d, mu_d, dt
         )
         beta_prev = beta_cmd
         phi_dot_prev = phi_dot_cmd
+        iterations += 1

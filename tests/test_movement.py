@@ -5,22 +5,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
-from .helpers import unlimited_rotation_controller
-
-
-def twist_to_icr(vx: float, vy: float, vz: float):
-    """Convert a twist command (vx, vy, vz) to lmda and mu.
-
-    Eta represents the motion about the ICR as represented in the projective plane.
-    See eq.(1) of the control paper.
-    """
-    norm = np.linalg.norm([vx, vy, vz])
-    if np.isclose(norm, 0, atol=0.01):
-        return None, 0
-    eta = (1 / norm) * np.array([-vy, vx, vz, norm ** 2])
-    lmda = eta[0:3].reshape(-1, 1)
-    mu = eta[3]
-    return lmda, mu
+from .helpers import unlimited_rotation_controller, twist_to_icr
 
 
 @given(
