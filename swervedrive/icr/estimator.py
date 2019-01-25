@@ -404,9 +404,9 @@ class Estimator:
             l = column(self.l_v, i)
             # fix for the out by pi issue, basically the flip-wheel function below
             S[i] = math.atan2(lmda.T.dot(a_orth), lmda.T.dot(a - l))
-            dif_sin = math.sin(S[i])
+            """dif_sin = math.sin(S[i])
             dif_cos = math.cos(S[i])
-            S[i] = np.arctan(dif_sin / dif_cos)
+            S[i] = np.arctan(dif_sin / dif_cos)"""
         S[np.isnan(S)] = math.pi / 2
         S = S.reshape(-1, 1)
         return S

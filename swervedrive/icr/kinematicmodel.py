@@ -193,6 +193,12 @@ class KinematicModel:
             - np.multiply(self.b, beta_prime),
             self.r,
         )
+        """phi_dot = ((s2_lmda - self.b_vector).T.dot(lmda) * mu
+            - np.multiply(self.b, beta_prime)
+        )
+        print("phi_dot * r %s" % phi_dot)
+        phi_dot = np.divide(phi_dot, self.r)"""
+        print("phi_dot %s" % phi_dot)
 
         assert phi_dot.shape == (self.n_modules, 1)
 
@@ -209,10 +215,10 @@ class KinematicModel:
         assert phi_dot_prime.shape == (self.n_modules, 1)
 
         return (
-            np.reshape(beta_prime, (-1, 1)),
-            np.reshape(beta_2prime, (-1, 1)),
-            np.reshape(phi_dot, (-1, 1)),
-            np.reshape(phi_dot_prime, (-1, 1)),
+            beta_prime,
+            beta_2prime,
+            phi_dot,
+            phi_dot_prime
         )
 
     def reconfigure_wheels(self, beta_d: np.ndarray, beta_e: np.ndarray):
@@ -287,8 +293,8 @@ class KinematicModel:
 
         assert lmda.shape == (3,1), lmda
 
-        s = np.dot(self.a_orth.T, lmda)
-        c = np.dot((self.a - self.l_vector).T, lmda)
+        s = self.a_orth.T.dot(lmda)
+        c = (self.a - self.l_vector).T.dot(lmda)
         s1_lmda = (
             np.multiply(s, (self.a - self.l_vector).T) - np.multiply(c, self.a_orth.T)
         ).T

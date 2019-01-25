@@ -1,6 +1,7 @@
 from .estimator import Estimator
 from .kinematicmodel import KinematicModel
 from .timescaler import TimeScaler
+import math
 import numpy as np
 from typing import List
 
@@ -95,6 +96,7 @@ class Controller:
         assert len(modules_beta.shape) == 2 and modules_beta.shape[0] == self.n_modules, modules_beta
         assert len(modules_phi_dot.shape) == 2 and modules_phi_dot.shape[0] == self.n_modules, modules_phi_dot
 
+        modules_beta, modules_phi_dot = clamp_rotations(modules_beta, modules_phi_dot)
         if lmda_d is not None:
             assert lmda_d.shape == (3,1), lmda_d
         if self.kinematic_model.state == KinematicModel.State.RECONFIGURING:
@@ -114,7 +116,9 @@ class Controller:
 
         lmda_e = self.icre.estimate_lmda(modules_beta)
         assert lmda_e.shape == (3,1), lmda_e
+        _, modules_phi_dot = clamp_rotations(self.icre.S(lmda_e), modules_phi_dot)
         mu_e = self.kinematic_model.estimate_mu(modules_phi_dot, lmda_e)
+        print("mu_e %s, mu_d %s" % (mu_e, mu_d))
         if lmda_d is None:
             lmda_d = lmda_e
         xi_e = self.kinematic_model.compute_odometry(lmda_e, mu_e, delta_t)
@@ -149,10 +153,15 @@ class Controller:
         beta_dot, beta_2dot, phi_2dot_p = self.scaler.scale_motion(
             dbeta, d2beta, dphi_dot_p
         )
+        print("dphi_dot_p %s" % dphi_dot_p)
+        print("phi_2dot %s" % phi_2dot_p)
 
         beta_c, phi_dot_c = self.integrate_motion(
             beta_dot, beta_2dot, phi_dot_p, phi_2dot_p, modules_beta, delta_t
         )
+        # Flip back if the estimated q values aren't bounded in +/- pi/2
+        _, phi_dot_c = clamp_rotations(self.icre.S(lmda_e), phi_dot_c)
+        print("q_e: %s\nq_d: %s" % (self.icre.S(lmda_e), self.icre.S(lmda_d)))
 
         assert len(beta_c.shape) == 2 and beta_c.shape[0] == self.n_modules, beta_c
         assert len(phi_dot_c.shape) == 2 and phi_dot_c.shape[0] == self.n_modules, phi_dot_c
@@ -216,3 +225,17 @@ class Controller:
             self.kinematic_model.state = KinematicModel.State.STOPPING
 
         return beta_c, phi_dot_c
+
+def clamp_rotations(q, phi_dot):
+    assert len(q.shape) == 2 and q.shape[1] == 1, q
+    assert len(phi_dot.shape) == 2 and phi_dot.shape[1] == 1, phi_dot
+    clamped = q
+    flipped_phi = phi_dot
+    for idx, qi in enumerate(q[:,0]):
+        clamped[idx,0] = (qi + math.pi/2) % math.pi - math.pi/2
+        if abs((qi - clamped[idx, 0]) % (2*math.pi)) < 1e-2 :
+            flipped_phi[idx] = -flipped_phi[idx]
+    return clamped, flipped_phi
+
+
+
