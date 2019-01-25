@@ -162,7 +162,7 @@ class Controller:
         # Flip back if the estimated q values aren't bounded in +/- pi/2
         _, phi_dot_c = clamp_rotations(self.icre.S(lmda_e), phi_dot_c)
         print("q_e: %s\nq_d: %s" % (self.icre.S(lmda_e), self.icre.S(lmda_d)))
-
+        print("phi_dot_c: %s" % phi_dot_c)
         assert len(beta_c.shape) == 2 and beta_c.shape[0] == self.n_modules, beta_c
         assert len(phi_dot_c.shape) == 2 and phi_dot_c.shape[0] == self.n_modules, phi_dot_c
 
@@ -229,12 +229,12 @@ class Controller:
 def clamp_rotations(q, phi_dot):
     assert len(q.shape) == 2 and q.shape[1] == 1, q
     assert len(phi_dot.shape) == 2 and phi_dot.shape[1] == 1, phi_dot
-    clamped = q
-    flipped_phi = phi_dot
+    clamped = np.zeros(q.shape)
+    flipped_phi = np.copy(phi_dot)
     for idx, qi in enumerate(q[:,0]):
         clamped[idx,0] = (qi + math.pi/2) % math.pi - math.pi/2
-        if abs((qi - clamped[idx, 0]) % (2*math.pi)) < 1e-2 :
-            flipped_phi[idx] = -flipped_phi[idx]
+        if abs((qi - clamped[idx, 0]) % (2*math.pi)) > 1e-2:
+            flipped_phi[idx,0] = -phi_dot[idx,0]
     return clamped, flipped_phi
 
 

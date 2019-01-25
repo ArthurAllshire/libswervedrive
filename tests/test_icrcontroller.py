@@ -8,6 +8,7 @@ from hypothesis.extra.numpy import arrays
 from .helpers import unlimited_rotation_controller, build_controller, twist_to_icr
 
 from swervedrive.icr.estimator import shortest_distance
+from swervedrive.icr.controller import clamp_rotations
 
 
 def cartesian_to_lambda(x, y):
@@ -156,3 +157,13 @@ def test_bad_s_2dot():
         beta_prev = beta_cmd
         phi_dot_prev = phi_dot_cmd
         iterations += 1
+
+def test_clamp_rotations():
+    q = np.array([[0], [math.pi/4], [-math.pi/4], [math.pi/2],
+        [-math.pi/2], [3*math.pi/4], [-3*math.pi/4]])
+    phi_dot = np.array([[1]] * 7)
+
+    q_clamped, phi_clamped = clamp_rotations(q, phi_dot)
+
+    assert np.array_equal(phi_clamped,
+            np.array([[1],[1],[1],[-1],[1],[-1],[-1]])), "Phi dot: %s\nclamped: %s" % (phi_dot, phi_clamped)
