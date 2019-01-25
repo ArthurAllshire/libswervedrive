@@ -196,9 +196,7 @@ class KinematicModel:
         """phi_dot = ((s2_lmda - self.b_vector).T.dot(lmda) * mu
             - np.multiply(self.b, beta_prime)
         )
-        print("phi_dot * r %s" % phi_dot)
         phi_dot = np.divide(phi_dot, self.r)"""
-        print("phi_dot %s" % phi_dot)
 
         assert phi_dot.shape == (self.n_modules, 1)
 
