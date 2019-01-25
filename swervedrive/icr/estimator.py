@@ -206,12 +206,16 @@ class Estimator:
             a = column(self.a, i).reshape(3)
             a_orth = column(self.a_orth, i).reshape(3)
             l = column(self.l_v, i).reshape(3)
+            s = column(self.s, i)
+
             delta = lmda.dot(a - l)
             omega = lmda.dot(a_orth)
             # equation 18 excluding ∂lmda/∂u
             gamma_top = omega * (a - l) + delta * a_orth
             gamma_bottom = lmda.dot(delta * (a - l) - omega * a_orth)
-            if abs(gamma_bottom) < self.tolerance:
+
+            lmda_singular = s / np.linalg.norm(s)
+            if np.allclose(lmda, lmda_singular, atol=self.tolerance):
                 S_m[i] = 0
                 S_n[i] = 0
                 continue
