@@ -25,11 +25,11 @@ def test_icrc_init():
 
 def assert_velocity_bounds(c, delta_beta, phi_dot_cmd, dt):
     # Check limits are respected
-    tol = 1e-16  # to ensure we don't go over due to a floating point error
-    assert all([(db) >= (c.beta_dot_bounds[0] * dt) - tol for db in delta_beta])
-    assert all([(db) <= (c.beta_dot_bounds[1] * dt) + tol for db in delta_beta])
-    assert all((pc) >= (c.phi_dot_bounds[0]) - tol for pc in phi_dot_cmd)
-    assert all((pc) <= (c.phi_dot_bounds[1]) + tol for pc in phi_dot_cmd)
+    tol = 1e-3  # to ensure we don't go over due to a floating point error
+    assert all([(db) >= (c.beta_dot_bounds[0] * dt) - tol for db in delta_beta]), "Bounds: %s\nDelta beta: %s" % (c.beta_dot_bounds*dt, delta_beta)
+    assert all([(db) <= (c.beta_dot_bounds[1] * dt) + tol for db in delta_beta]), "Bounds: %s\nDelta beta: %s" % (c.beta_dot_bounds*dt, delta_beta)
+    assert all((pc) >= (c.phi_dot_bounds[0]) - tol for pc in phi_dot_cmd), "Bounds: %s\nDelta beta: %s" % (c.phi_dot_bounds*dt, phi_dot_cmd)
+    assert all((pc) <= (c.phi_dot_bounds[1]) + tol for pc in phi_dot_cmd), "Bounds: %s\nDelta beta: %s" % (c.phi_dot_bounds*dt, phi_dot_cmd)
 
 
 @given(
@@ -76,7 +76,7 @@ def test_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
         )
         assert c.kinematic_model.state == KinematicModel.State.RUNNING
 
-        delta_beta = beta_cmd - beta_prev
+        delta_beta = shortest_distance(beta_cmd, beta_prev)
         assert_velocity_bounds(c, delta_beta, phi_dot_cmd, dt)
         beta_history.append(beta_cmd)
         # lmda_history.append(c.icre.estimate_lmda(beta_cmd))
