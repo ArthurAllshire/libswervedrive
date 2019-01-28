@@ -416,6 +416,10 @@ class Estimator:
         return S
 
 
+def constrain_angle(angle):
+    return math.atan2(math.sin(angle), math.cos(angle))
+
+
 def shortest_distance(
     q: np.ndarray, S_lmda: np.ndarray, beta_bounds: np.ndarray = None
 ):
@@ -433,19 +437,19 @@ def shortest_distance(
     # Iterate because we have to apply joint limits
     output = np.zeros(q.shape)
     for joint, (qi, beta_i) in enumerate(zip(q[:,0], S_lmda[:,0])):
-        if beta_bounds is not None:
-            bounds = beta_bounds[joint]
+
+        if beta_bounds is None:
+            opp_beta = constrain_angle(beta_i + math.pi)
+            diff = constrain_angle(beta_i - qi)
+            opp_diff = constrain_angle(opp_beta - qi)
+
+            if abs(diff) < abs(opp_diff):
+                output[joint] = diff
+            else:
+                output[joint] = opp_diff
         else:
-            bounds = [-2 * math.pi, 2 * math.pi]
-        qi = math.atan2(math.sin(qi), math.cos(qi))
-        d = qi - beta_i
-        beta_i_plus = beta_i + math.pi
-        beta_i_minus = beta_i - math.pi
-        if beta_i_minus > bounds[0] and abs(qi - beta_i_minus) < abs(d):
-            d = qi - beta_i_minus
-        if beta_i_plus < bounds[1] and abs(qi - beta_i_plus) < abs(d):
-            d = qi - beta_i_plus
-        output[joint] = d
+            # TODO: implement
+            output[joint] = 0
     return output
 
 

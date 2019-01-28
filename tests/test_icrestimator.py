@@ -123,7 +123,7 @@ def test_estimate_lambda_under_uncertainty(lmda, lmda_sign, errors):
     lmda_e = icre.estimate_lmda(q)
     q_e = icre.S(lmda_e)
     d = shortest_distance(q, q_e)
-    assert np.isclose(d, 0, atol=math.pi * 4 / 180).all(), (
+    assert np.isclose(d, 0, atol=math.pi * 6 / 180).all(), (
         "Actual: %s\nEstimate: %s\nBeta errors: %s, d %s q %s, q_e %s"
         % (lmda, lmda_e, errors / math.pi * 180, d, q, q_e)
     )
