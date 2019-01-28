@@ -4,7 +4,7 @@ from swervedrive.icr import Estimator
 from swervedrive.icr.estimator import shortest_distance
 from swervedrive.icr.kinematicmodel import cartesian_to_lambda as c2l
 
-from hypothesis import given, example
+from hypothesis import given, example, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
@@ -112,6 +112,7 @@ def test_estimate_lambda(lmda, lmda_sign):
         elements=st.floats(min_value=-math.pi * 2 / 180, max_value=math.pi * 2 / 180),
     ),
 )
+@settings(max_examples=100)
 def test_estimate_lambda_under_uncertainty(lmda, lmda_sign, errors):
     icre = init_icre([0, math.pi / 2, math.pi], [1, 1, 1])
     if np.linalg.norm(lmda) == 0:
@@ -123,8 +124,8 @@ def test_estimate_lambda_under_uncertainty(lmda, lmda_sign, errors):
     q_e = icre.S(lmda_e)
     d = shortest_distance(q, q_e)
     assert np.isclose(d, 0, atol=math.pi * 4 / 180).all(), (
-        "Actual: %s\nEstimate: %s\nBeta errors: %s"
-        % (lmda, lmda_e, errors / math.pi * 180)
+        "Actual: %s\nEstimate: %s\nBeta errors: %s, d %s q %s, q_e %s"
+        % (lmda, lmda_e, errors / math.pi * 180, d, q, q_e)
     )
 
 
@@ -288,6 +289,15 @@ def test_shortest_distance_manual():
     S_lmda = np.array([[0]] * 4)
     check_aligned(
         shortest_distance(q, S_lmda), np.array([[0], [0], [-math.pi / 2], [0]]).T
+    )
+
+    q1 = np.array([[3.14159265], [3.14159265], [3.14159265]])
+    q2 = np.array([[-3.02631992], [3.14159264], [3.02631992]])
+    d = shortest_distance(q1, q2)
+    below = np.array([[0.2, 1e-6, 0.2]]).reshape(-1, 1)
+    assert np.less(np.absolute(d), below).all(), (
+        "d %s, q1 %s, q2 %s, abs(d) should be below %s" %
+        (d, q1, q2, below)
     )
 
 
