@@ -215,7 +215,7 @@ class Estimator:
             gamma_bottom = lmda.dot(delta * (a - l) - omega * a_orth)
 
             lmda_singular = s / np.linalg.norm(s)
-            if np.allclose(lmda, lmda_singular, atol=self.tolerance):
+            if np.allclose(lmda, lmda_singular, atol=self.tolerance) or np.allclose(-lmda, lmda_singular, atol=self.tolerance):
                 S_m[i] = 0
                 S_n[i] = 0
                 continue
