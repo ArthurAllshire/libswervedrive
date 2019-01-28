@@ -417,7 +417,7 @@ class Estimator:
 
 
 def constrain_angle(angle):
-    return math.atan2(math.sin(angle), math.cos(angle))
+    return np.arctan2(np.sin(angle), np.cos(angle))
 
 
 def shortest_distance(

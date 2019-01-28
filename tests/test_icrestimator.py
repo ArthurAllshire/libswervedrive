@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from swervedrive.icr import Estimator
-from swervedrive.icr.estimator import shortest_distance
+from swervedrive.icr.estimator import shortest_distance, constrain_angle
 from swervedrive.icr.kinematicmodel import cartesian_to_lambda as c2l
 
 from hypothesis import given, example, settings
@@ -129,14 +129,20 @@ def test_estimate_lambda_under_uncertainty(lmda, lmda_sign, errors):
     )
 
 
+def allclose_pi_offset(a, b, atol=1e-8):
+    shp = a.shape
+    return (np.allclose(constrain_angle(a), constrain_angle(b), atol=atol)
+            or np.allclose(constrain_angle(a+np.full(shp, math.pi)), constrain_angle(b), atol=atol))
+
+
 def test_joint_space_conversion():
     icre = init_icre([math.pi / 4], [1])
     lmda = np.array([0, 0, -1]).reshape(-1, 1)
     beta_target = np.array([0]).reshape(-1, 1)
-    assert np.allclose(beta_target, icre.S(lmda))
+    assert allclose_pi_offset(beta_target, icre.S(lmda))
     lmda = np.array([0, -1, 0]).reshape(-1, 1)
     beta_target = np.array([math.pi / 4]).reshape(-1, 1)
-    assert np.allclose(beta_target, icre.S(lmda))
+    assert allclose_pi_offset(beta_target, icre.S(lmda))
 
     # square robot with side length of 2 to make calculations simpler
     alpha = math.pi / 4
@@ -153,7 +159,7 @@ def test_joint_space_conversion():
             math.acos(6 / (2 * math.sqrt(10))),
         ]
     ).reshape(-1, 1)
-    assert np.allclose(beta_target, icre.S(lmda), atol=tolerance)
+    assert allclose_pi_offset(beta_target, icre.S(lmda), atol=tolerance)
 
 
 def test_solve():
