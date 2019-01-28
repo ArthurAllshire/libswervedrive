@@ -448,8 +448,7 @@ def shortest_distance(
             else:
                 output[joint] = opp_diff
         else:
-            # TODO: implement
-            output[joint] = 0
+            raise NotImplementedError("shortest_distance does not yet support beta_bounds not None")
     return output
 
 
