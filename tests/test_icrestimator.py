@@ -161,6 +161,16 @@ def test_joint_space_conversion():
     ).reshape(-1, 1)
     assert allclose_pi_offset(beta_target, icre.S(lmda), atol=tolerance)
 
+    alphas = np.array([math.pi/4]*np.arange(4)).reshape(-1,1)
+    icre = init_icre(alphas, [1] * 4)
+    icr = np.array([0, 0, -1]).reshape(-1, 1)
+    lmda = icr * 1 / np.linalg.norm(icr)
+    beta_target = np.array([[0]] * 4)
+    assert allclose_pi_offset(beta_target, icre.S(lmda), atol=tolerance)
+
+
+
+
 
 def test_solve():
     # for now, check only for runtime errors until compute_derivatives works

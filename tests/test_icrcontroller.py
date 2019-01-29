@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from hypothesis import given
+from hypothesis import given, example
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
@@ -39,6 +39,11 @@ def assert_velocity_bounds(c, delta_beta, phi_dot_cmd, dt):
     ),  # make this *float* to give uniform distribution
     bounds=st.lists(st.floats(1e-1, 10), min_size=4, max_size=4),
 )
+@example(
+        lmda_d=np.array([[1.00000000e-06, 1.00000004e-06, 1.00000004e-06]]),
+	lmda_d_sign=0.0, bounds=[0.1, 0.1, 2.6952844936683134, 0.1]
+	)
+
 def test_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
     from swervedrive.icr.kinematicmodel import KinematicModel
 
@@ -167,3 +172,54 @@ def test_clamp_rotations():
 
     assert np.array_equal(phi_clamped,
             np.array([[1],[1],[1],[-1],[1],[-1],[-1]])), "Phi dot: %s\nclamped: %s" % (phi_dot, phi_clamped)
+
+@given(
+    lmda_initial=arrays(np.float, (1, 3), elements=st.floats(min_value=1e-6, max_value=1)),
+    lmda_initial_sign=st.floats(
+        min_value=-1, max_value=1
+    ),  # make this *float* to give uniform distribution
+    lmda_goal=arrays(np.float, (1, 3), elements=st.floats(min_value=1e-6, max_value=1)),
+    lmda_goal_sign=st.floats(
+        min_value=-1, max_value=1
+    ),  # make this *float* to give uniform distribution
+    )
+def test_find_path(lmda_initial, lmda_initial_sign, lmda_goal, lmda_goal_sign):
+    mu_d = -1.0
+
+    lmda_initial = (math.copysign(1, lmda_initial_sign) * lmda_initial / np.linalg.norm(lmda_initial)).reshape(
+        -1, 1
+    )
+    lmda_goal = (math.copysign(1, lmda_goal_sign) * lmda_goal / np.linalg.norm(lmda_goal)).reshape(
+        -1, 1
+    )
+    c = unlimited_rotation_controller(
+        [-5, 5], [-20, 20], [-128, 128], [-100, 100]
+    )
+    beta_prev = c.icre.S(lmda_initial)
+    q_d = c.icre.S(lmda_goal)
+    phi_dot_prev = np.array([[0]] * 4)
+    mu_e = 0
+    dt = 0.1
+
+    iterations = 0
+    beta_history = []
+    lmda_history = []
+    mu_history = []
+    while iterations < 50 and not (
+        np.isclose(shortest_distance(beta_prev, q_d), 0, atol=math.pi * 1 / 180).all()
+        and (np.isclose(mu_e, mu_d, atol=1e-1) or np.isclose(-mu_e, mu_d, atol=1e-1))
+    ):
+        beta_cmd, phi_dot_cmd, xi_e = c.control_step(
+            beta_prev, phi_dot_prev, lmda_goal, mu_d, dt
+        )
+        beta_prev = beta_cmd
+        phi_dot_prev = phi_dot_cmd
+        lmda_e = c.icre.estimate_lmda(beta_prev)
+        mu_e = c.kinematic_model.estimate_mu(phi_dot_prev, lmda_e)
+        beta_history.append(beta_cmd)
+        mu_history.append(mu_e)
+        iterations += 1
+    assert iterations < 50, (
+            "Controller did not reach target:\n%s\nactual: %s\nbeta target: %s\nbeta history: %s\nlambda history: %s\nmu target: %s\nmu actual: %s"
+        % (lmda_goal, lmda_e, q_d, beta_history, lmda_history, mu_d, mu_history)
+    )
