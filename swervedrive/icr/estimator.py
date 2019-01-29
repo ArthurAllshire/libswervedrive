@@ -215,7 +215,8 @@ class Estimator:
             gamma_bottom = lmda.dot(delta * (a - l) - omega * a_orth)
 
             lmda_singular = s / np.linalg.norm(s)
-            if np.allclose(lmda, lmda_singular, atol=self.tolerance) or np.allclose(-lmda, lmda_singular, atol=self.tolerance):
+            if (np.allclose(lmda, lmda_singular, atol=self.tolerance)
+                    or np.allclose(-lmda, lmda_singular, atol=self.tolerance)):
                 S_m[i] = 0
                 S_n[i] = 0
                 continue
@@ -429,7 +430,7 @@ def shortest_distance(
     :returns: an array of the same length as the input arrays with each component
         as the correct distance of q_e to q_d.
     """
-    assert len(q_e.shape) == 2 and q_e.shape[1] == 1, q
+    assert len(q_e.shape) == 2 and q_e.shape[1] == 1, q_e
     assert len(q_d.shape) == 2 and q_d.shape[1] == 1, q_d
     # Iterate because we have to apply joint limits
     output = np.zeros(q_e.shape)

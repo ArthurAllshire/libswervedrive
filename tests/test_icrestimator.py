@@ -123,7 +123,7 @@ def test_estimate_lambda_under_uncertainty(lmda, lmda_sign, errors):
     lmda_e = icre.estimate_lmda(q)
     q_e = icre.S(lmda_e)
     d = shortest_distance(q, q_e)
-    assert np.isclose(d, 0, atol=math.pi * 6 / 180).all(), (
+    assert np.isclose(d, 0, atol=math.pi * 10 / 180).all(), (
         "Actual: %s\nEstimate: %s\nBeta errors: %s, d %s q %s, q_e %s"
         % (lmda, lmda_e, errors / math.pi * 180, d, q, q_e)
     )
@@ -167,9 +167,6 @@ def test_joint_space_conversion():
     lmda = icr * 1 / np.linalg.norm(icr)
     beta_target = np.array([[0]] * 4)
     assert allclose_pi_offset(beta_target, icre.S(lmda), atol=tolerance)
-
-
-
 
 
 def test_solve():
