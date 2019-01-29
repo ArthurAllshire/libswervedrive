@@ -134,9 +134,7 @@ class KinematicModel:
 
         assert lmda.shape == (3,1), lmda
 
-        lmda = np.reshape(lmda, (-1, 1))
         _, s_perp_2 = self.s_perp(lmda)
-        # TODO: change this line
         f_lmda = (self.r / (s_perp_2 - self.b_vector).T.dot(lmda)).reshape(-1)
         return f_lmda * phi_dot
 
@@ -232,7 +230,7 @@ class KinematicModel:
         assert len(beta_d.shape) == 2 and beta_d.shape[1] == 1, beta_d
         assert len(beta_e.shape) == 2 and beta_e.shape[1] == 1, beta_e
 
-        error = shortest_distance(beta_d, beta_e)
+        error = shortest_distance(beta_e, beta_d)
         dbeta = self.k_beta * error
         if np.linalg.norm(error) < 1/180*math.pi * self.n_modules:  # degrees per module
             self.state = KinematicModel.State.RUNNING
@@ -275,8 +273,6 @@ class KinematicModel:
         # this requires solving equation (22) from the control paper, i think
         # we may need to look into whether this is valid for a system with no
         # wheel coupling
-        lmda_e = np.reshape(lmda_e, (-1, 1))
-        phi_dot = np.reshape(phi_dot, (-1, 1))
         s1_lmda, s2_lmda = self.s_perp(lmda_e)
         C = np.multiply(1.0 / s2_lmda.T.dot(lmda_e), s1_lmda.T)
         D = (s2_lmda - self.b_vector).T.dot(lmda_e) / self.r

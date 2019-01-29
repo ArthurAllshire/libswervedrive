@@ -408,9 +408,6 @@ class Estimator:
             l = column(self.l_v, i)
             # fix for the out by pi issue, basically the flip-wheel function below
             S[i] = math.atan2(lmda.T.dot(a_orth), lmda.T.dot(a - l))
-            """dif_sin = math.sin(S[i])
-            dif_cos = math.cos(S[i])
-            S[i] = np.arctan(dif_sin / dif_cos)"""
         S[np.isnan(S)] = math.pi / 2
         S = S.reshape(-1, 1)
         return S
@@ -421,22 +418,22 @@ def constrain_angle(angle):
 
 
 def shortest_distance(
-    q: np.ndarray, S_lmda: np.ndarray, beta_bounds: np.ndarray = None
+    q_e: np.ndarray, q_d: np.ndarray, beta_bounds: np.ndarray = None
 ):
     """
     Determine if the rotation each wheel needs to make to get to the target.
     Respect the joint limits, but allow movement to a position pi from the target position
     if joint limits allow it.
-    :param q: an array representing all of the current beta angles
-    :parem S_lmda: an array of all the beta angles required to achieve a desired ICR
+    :param q_e: an array representing all of the current beta angles
+    :parem q_d: an array of all the desired beta angles
     :returns: an array of the same length as the input arrays with each component
-        as the correct distance of q from S_lmda.
+        as the correct distance of q_e to q_d.
     """
-    assert len(q.shape) == 2 and q.shape[1] == 1, q
-    assert len(S_lmda.shape) == 2 and S_lmda.shape[1] == 1, S_lmda
+    assert len(q_e.shape) == 2 and q_e.shape[1] == 1, q
+    assert len(q_d.shape) == 2 and q_d.shape[1] == 1, q_d
     # Iterate because we have to apply joint limits
-    output = np.zeros(q.shape)
-    for joint, (qi, beta_i) in enumerate(zip(q[:,0], S_lmda[:,0])):
+    output = np.zeros(q_e.shape)
+    for joint, (qi, beta_i) in enumerate(zip(q_e[:,0], q_d[:,0])):
 
         if beta_bounds is None:
             opp_beta = constrain_angle(beta_i + math.pi)
