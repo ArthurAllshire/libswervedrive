@@ -26,10 +26,18 @@ def test_icrc_init():
 def assert_velocity_bounds(c, delta_beta, phi_dot_cmd, dt):
     # Check limits are respected
     tol = 1e-3  # to ensure we don't go over due to a floating point error
-    assert all([(db) >= (c.beta_dot_bounds[0] * dt) - tol for db in delta_beta]), "Bounds: %s\nDelta beta: %s" % (c.beta_dot_bounds*dt, delta_beta)
-    assert all([(db) <= (c.beta_dot_bounds[1] * dt) + tol for db in delta_beta]), "Bounds: %s\nDelta beta: %s" % (c.beta_dot_bounds*dt, delta_beta)
-    assert all((pc) >= (c.phi_dot_bounds[0]) - tol for pc in phi_dot_cmd), "Bounds: %s\nDelta beta: %s" % (c.phi_dot_bounds*dt, phi_dot_cmd)
-    assert all((pc) <= (c.phi_dot_bounds[1]) + tol for pc in phi_dot_cmd), "Bounds: %s\nDelta beta: %s" % (c.phi_dot_bounds*dt, phi_dot_cmd)
+    assert all(
+        [(db) >= (c.beta_dot_bounds[0] * dt) - tol for db in delta_beta]
+    ), "Bounds: %s\nDelta beta: %s" % (c.beta_dot_bounds * dt, delta_beta)
+    assert all(
+        [(db) <= (c.beta_dot_bounds[1] * dt) + tol for db in delta_beta]
+    ), "Bounds: %s\nDelta beta: %s" % (c.beta_dot_bounds * dt, delta_beta)
+    assert all(
+        (pc) >= (c.phi_dot_bounds[0]) - tol for pc in phi_dot_cmd
+    ), "Bounds: %s\nDelta beta: %s" % (c.phi_dot_bounds * dt, phi_dot_cmd)
+    assert all(
+        (pc) <= (c.phi_dot_bounds[1]) + tol for pc in phi_dot_cmd
+    ), "Bounds: %s\nDelta beta: %s" % (c.phi_dot_bounds * dt, phi_dot_cmd)
 
 
 @given(
@@ -40,10 +48,10 @@ def assert_velocity_bounds(c, delta_beta, phi_dot_cmd, dt):
     bounds=st.lists(st.floats(1e-1, 10), min_size=4, max_size=4),
 )
 @example(
-        lmda_d=np.array([[1.00000000e-06, 1.00000004e-06, 1.00000004e-06]]),
-	lmda_d_sign=0.0, bounds=[0.1, 0.1, 2.6952844936683134, 0.1]
-	)
-
+    lmda_d=np.array([[1.00000000e-06, 1.00000004e-06, 1.00000004e-06]]),
+    lmda_d_sign=0.0,
+    bounds=[0.1, 0.1, 2.6952844936683134, 0.1],
+)
 def test_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
     from swervedrive.icr.kinematicmodel import KinematicModel
 
@@ -143,15 +151,13 @@ def test_structural_singularity_command():
 
 
 def test_bad_s_2dot():
-    c = unlimited_rotation_controller(
-        [-5, 5], [-20, 20], [-128, 128], [-100, 100]
-    )
+    c = unlimited_rotation_controller([-5, 5], [-20, 20], [-128, 128], [-100, 100])
 
     modules_beta = np.array([[0], [math.pi / 2], [0], [math.pi / 2]])
     modules_phi_dot = np.array([[0]] * 4)
 
     lmda_d, mu_d = twist_to_icr(0, 1, 0)
-    dt = 1/10
+    dt = 1 / 10
     beta_prev = modules_beta
     phi_dot_prev = modules_phi_dot
     iterations = 0
@@ -163,18 +169,32 @@ def test_bad_s_2dot():
         phi_dot_prev = phi_dot_cmd
         iterations += 1
 
+
 def test_clamp_rotations():
-    q = np.array([[0], [math.pi/4], [-math.pi/4], [math.pi/2],
-        [-math.pi/2], [3*math.pi/4], [-3*math.pi/4]])
+    q = np.array(
+        [
+            [0],
+            [math.pi / 4],
+            [-math.pi / 4],
+            [math.pi / 2],
+            [-math.pi / 2],
+            [3 * math.pi / 4],
+            [-3 * math.pi / 4],
+        ]
+    )
     phi_dot = np.array([[1]] * 7)
 
     q_clamped, phi_clamped = clamp_rotations(q, phi_dot)
 
-    assert np.array_equal(phi_clamped,
-            np.array([[1],[1],[1],[-1],[1],[-1],[-1]])), "Phi dot: %s\nclamped: %s" % (phi_dot, phi_clamped)
+    assert np.array_equal(
+        phi_clamped, np.array([[1], [1], [1], [-1], [1], [-1], [-1]])
+    ), "Phi dot: %s\nclamped: %s" % (phi_dot, phi_clamped)
+
 
 @given(
-    lmda_initial=arrays(np.float, (1, 3), elements=st.floats(min_value=1e-6, max_value=1)),
+    lmda_initial=arrays(
+        np.float, (1, 3), elements=st.floats(min_value=1e-6, max_value=1)
+    ),
     lmda_initial_sign=st.floats(
         min_value=-1, max_value=1
     ),  # make this *float* to give uniform distribution
@@ -182,19 +202,19 @@ def test_clamp_rotations():
     lmda_goal_sign=st.floats(
         min_value=-1, max_value=1
     ),  # make this *float* to give uniform distribution
-    )
+)
 def test_find_path(lmda_initial, lmda_initial_sign, lmda_goal, lmda_goal_sign):
     mu_d = -1.0
 
-    lmda_initial = (math.copysign(1, lmda_initial_sign) * lmda_initial / np.linalg.norm(lmda_initial)).reshape(
-        -1, 1
-    )
-    lmda_goal = (math.copysign(1, lmda_goal_sign) * lmda_goal / np.linalg.norm(lmda_goal)).reshape(
-        -1, 1
-    )
-    c = unlimited_rotation_controller(
-        [-5, 5], [-20, 20], [-128, 128], [-100, 100]
-    )
+    lmda_initial = (
+        math.copysign(1, lmda_initial_sign)
+        * lmda_initial
+        / np.linalg.norm(lmda_initial)
+    ).reshape(-1, 1)
+    lmda_goal = (
+        math.copysign(1, lmda_goal_sign) * lmda_goal / np.linalg.norm(lmda_goal)
+    ).reshape(-1, 1)
+    c = unlimited_rotation_controller([-5, 5], [-20, 20], [-128, 128], [-100, 100])
     beta_prev = c.icre.S(lmda_initial)
     q_d = c.icre.S(lmda_goal)
     phi_dot_prev = np.array([[0]] * 4)
@@ -220,6 +240,7 @@ def test_find_path(lmda_initial, lmda_initial_sign, lmda_goal, lmda_goal_sign):
         mu_history.append(mu_e)
         iterations += 1
     assert iterations < 50, (
-            "Controller did not reach target:\n%s\nactual: %s\nbeta target: %s\nbeta history: %s\nlambda history: %s\nmu target: %s\nmu actual: %s"
+        "Controller did not reach target:\n%s\nactual: %s\n \
+        beta target: %s\nbeta history: %s\nlambda history: %s\nmu target: %s\nmu actual: %s"
         % (lmda_goal, lmda_e, q_d, beta_history, lmda_history, mu_d, mu_history)
     )
