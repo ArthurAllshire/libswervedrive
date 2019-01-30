@@ -4,6 +4,9 @@ import math
 import numpy as np
 import pytest
 
+from hypothesis import given, example
+from hypothesis import strategies as st
+from hypothesis.extra.numpy import arrays
 
 @pytest.fixture
 def kinematic_model():
@@ -121,7 +124,7 @@ def test_s_perp(kinematic_model):
     assert np.allclose(s_lmda[1], expected_s2)
 
 
-def test_estimate_mu(kinematic_model):
+def test_estimate_mu_manual(kinematic_model):
     lmda = cartesian_to_lambda(0, 0)  # Centre of robot
     expected = 1.0  # rad/s
     phi_dot = np.array([[expected * 1.0]] * 4)
@@ -145,6 +148,18 @@ def test_estimate_mu(kinematic_model):
         "\nCalculated mu: %f,\nexpected: %f\nlambda: %s"
         % (mu, expected * kinematic_model.r[0,0], lmda)
     )
+
+@given(flip=arrays(np.float, (4, 1), elements=st.floats(min_value=-1, max_value=1)))
+def test_estimate_mu(kinematic_model, flip):
+    flip[flip>=0] = 0
+    flip[flip<0] = math.pi
+    beta = np.array([[0.0]] * 4) + flip
+    phi_dot = np.array([[1.0]] * 4)
+    #phi_dot[flip>0] *= -1
+
+    lmda = np.array([[0],[0],[1]])
+    mu = kinematic_model.estimate_mu(phi_dot, lmda)
+    assert mu > 0
 
 
 def test_compute_odometry(kinematic_model):

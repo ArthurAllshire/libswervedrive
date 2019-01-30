@@ -178,53 +178,54 @@ class Estimator:
         """
         assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
         # Define the two working axes as m and n
-        S_m = np.zeros(shape=(self.n,))
-        S_n = np.zeros(shape=(self.n,))
-        lmda = lmda.reshape(3)  # computations require lambda as a row vector
+        S_m = np.zeros(shape=(self.n,1))
+        S_n = np.zeros(shape=(self.n,1))
 
         # Work out the best hemisphere to work in
-        u = lmda.dot(np.array([1, 0, 0]))
-        v = lmda.dot(np.array([0, 1, 0]))
-        w = lmda.dot(np.array([0, 0, 1]))
+        u = lmda.T.dot(np.array([[1], [0], [0]]))
+        v = lmda.T.dot(np.array([[0], [1], [0]]))
+        w = lmda.T.dot(np.array([[0], [0], [1]]))
         dots = {'u': abs(u), 'v': abs(v), 'w': abs(w)}
         axis = max(dots.keys(), key=(lambda k: dots[k]))
         if axis == 'u':
             # Parameterise u
-            dm = np.array([[-lmda[1] / lmda[0], 1, 0]])
-            dn = np.array([[-lmda[2] / lmda[0], 0, 1]])
+            dm = np.array([[-lmda[1,0] / lmda[0,0], 1, 0]]).T
+            dn = np.array([[-lmda[2,0] / lmda[0,0], 0, 1]]).T
         elif axis == 'v':
             # Parameterise v
-            dm = np.array([[1, -lmda[0] / lmda[1], 0]])
-            dn = np.array([[0, -lmda[2] / lmda[1], 1]])
+            dm = np.array([[1, -lmda[0,0] / lmda[1,0], 0]]).T
+            dn = np.array([[0, -lmda[2,0] / lmda[1,0], 1]]).T
         else:
             # Parameterise w
-            dm = np.array([[1, 0, -lmda[0] / lmda[2]]])
-            dn = np.array([[0, 1, -lmda[1] / lmda[2]]])
+            dm = np.array([[1, 0, -lmda[0,0] / lmda[2,0]]]).T
+            dn = np.array([[0, 1, -lmda[1,0] / lmda[2,0]]]).T
 
         for i in range(self.n):
             # equations 16 and 17 in the paper
-            a = column(self.a, i).reshape(3)
-            a_orth = column(self.a_orth, i).reshape(3)
-            l = column(self.l_v, i).reshape(3)
+            a = column(self.a, i)
+            a_orth = column(self.a_orth, i)
+            l = column(self.l_v, i)
             s = column(self.s, i)
 
-            delta = lmda.dot(a - l)
-            omega = lmda.dot(a_orth)
+            delta = lmda.T.dot(a - l)
+            omega = lmda.T.dot(a_orth)
             # equation 18 excluding ∂lmda/∂u
             gamma_top = omega * (a - l) + delta * a_orth
-            gamma_bottom = lmda.dot(delta * (a - l) - omega * a_orth)
+            gamma_bottom = lmda.T.dot(delta * (a - l) - omega * a_orth)
 
-            lmda_singular = s / np.linalg.norm(s)
-            if (np.allclose(lmda, lmda_singular, atol=self.tolerance)
-                    or np.allclose(-lmda, lmda_singular, atol=self.tolerance)):
-                S_m[i] = 0
-                S_n[i] = 0
+            if np.isclose(gamma_bottom, 0, atol=1e-3):
+            #lmda_singular = s / np.linalg.norm(s)
+            #if (np.allclose(lmda, lmda_singular, atol=self.tolerance)
+            #        or np.allclose(-lmda, lmda_singular, atol=self.tolerance)):
+                S_m[i,0] = 0
+                S_n[i,0] = 0
                 continue
             # equation 19
-            beta_m = dm.dot(gamma_top) / gamma_bottom
-            beta_n = dn.dot(gamma_top) / gamma_bottom
-            S_m[i] = beta_m
-            S_n[i] = beta_n
+            beta_m = dm.T.dot(gamma_top) / gamma_bottom
+            beta_n = dn.T.dot(gamma_top) / gamma_bottom
+            S_m[i,0] = beta_m
+            S_n[i,0] = beta_n
+        print(S_m, S_n)
         if axis == 'u':
             return None, S_m, S_n
         if axis == 'v':
@@ -253,24 +254,31 @@ class Estimator:
         :returns: the free parameters in the form (delta_u, delta_v, delta_w).
         """
         assert len(q.shape) == 2 and q.shape[1] == 1, q
+        if S_u is not None:
+            assert len(S_u.shape) == 2 and S_u.shape[1] == 1, S_u
+        if S_v is not None:
+            assert len(S_v.shape) == 2 and S_v.shape[1] == 1, S_v
+        if S_w is not None:
+            assert len(S_w.shape) == 2 and S_w.shape[1] == 1, S_w
         p_zero = self.S(lmda)
         diff = q - p_zero
         if S_u is None:
-            a_u = S_v.dot(S_v)
-            a_c = S_v.dot(S_w)
-            a_v = S_w.dot(S_w)
-            b = np.array([diff.T.dot(S_v.T), diff.T.dot(S_w.T)])
+            a_u = S_v.T.dot(S_v)
+            a_c = S_v.T.dot(S_w)
+            a_v = S_w.T.dot(S_w)
+            b = np.concatenate((diff.T.dot(S_v), diff.T.dot(S_w)))
         elif S_v is None:
-            a_u = S_u.dot(S_u)
-            a_c = S_u.dot(S_w)
-            a_v = S_w.dot(S_w)
-            b = np.array([diff.T.dot(S_u.T), diff.T.dot(S_w.T)])
+            a_u = S_u.T.dot(S_u)
+            a_c = S_u.T.dot(S_w)
+            a_v = S_w.T.dot(S_w)
+            b = np.concatenate((diff.T.dot(S_u), diff.T.dot(S_w)))
         else:
-            a_u = S_u.dot(S_u)
-            a_c = S_u.dot(S_v)
-            a_v = S_v.dot(S_v)
-            b = np.array([diff.T.dot(S_u.T), diff.T.dot(S_v.T)])
-        A = np.array([[a_u, a_c], [a_c, a_v]])
+            a_u = S_u.T.dot(S_u)
+            a_c = S_u.T.dot(S_v)
+            a_v = S_v.T.dot(S_v)
+            b = np.concatenate((diff.T.dot(S_u), diff.T.dot(S_v)))
+        A = np.stack((np.concatenate((a_u, a_c)), np.concatenate((a_c, a_v))))
+        assert False, (A, b)
         x = np.linalg.solve(A, b)
         if S_u is None:
             return None, x[0, 0], x[1, 0]

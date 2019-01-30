@@ -116,8 +116,11 @@ class Controller:
 
         lmda_e = self.icre.estimate_lmda(modules_beta)
         assert lmda_e.shape == (3,1), lmda_e
-        _, modules_phi_dot = clamp_rotations(self.icre.S(lmda_e), modules_phi_dot)
-        mu_e = self.kinematic_model.estimate_mu(modules_phi_dot, lmda_e)
+        _, flip_measured_to_lambda = clamp_rotations(self.icre.S(lmda_e),
+                np.array([[1.0]] * modules_beta.shape[0]))
+        flipped_phi_dot = np.multiply(modules_phi_dot, flip_measured_to_lambda)
+        flipped_modules_beta = np.multiply(modules_beta, flip_measured_to_lambda)
+        mu_e = self.kinematic_model.estimate_mu(flipped_phi_dot, lmda_e)
         if lmda_d is None:
             lmda_d = lmda_e
         xi_e = self.kinematic_model.compute_odometry(lmda_e, mu_e, delta_t)
@@ -154,10 +157,13 @@ class Controller:
         )
 
         beta_c, phi_dot_c = self.integrate_motion(
-            beta_dot, beta_2dot, phi_dot_p, phi_2dot_p, modules_beta, delta_t
+            #beta_dot, beta_2dot, phi_dot_p, phi_2dot_p, modules_beta, delta_t
+            #beta_dot, beta_2dot, np.multiply(flip_measured_to_lambda, phi_dot_p), np.multiply(flip_measured_to_lambda, phi_2dot_p), modules_beta, delta_t
+            beta_dot, beta_2dot, phi_dot_p, phi_2dot_p, flipped_modules_beta, delta_t
         )
         # Flip back if the estimated q values aren't bounded in +/- pi/2
-        _, phi_dot_c = clamp_rotations(self.icre.S(lmda_e), phi_dot_c)
+        #_, phi_dot_c = clamp_rotations(self.icre.S(lmda_e), phi_dot_c)
+        #beta_c, phi_dot_c = clamp_rotations(beta_c, phi_dot_c)
         assert len(beta_c.shape) == 2 and beta_c.shape[0] == self.n_modules, beta_c
         assert len(phi_dot_c.shape) == 2 and phi_dot_c.shape[0] == self.n_modules, phi_dot_c
 
