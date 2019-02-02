@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from .utils import constrain_angle
 
 
 class Estimator:
@@ -213,10 +214,10 @@ class Estimator:
             gamma_top = omega * (a - l) + delta * a_orth
             gamma_bottom = lmda.T.dot(delta * (a - l) - omega * a_orth)
 
-            if np.isclose(gamma_bottom, 0, atol=1e-3):
-            #lmda_singular = s / np.linalg.norm(s)
-            #if (np.allclose(lmda, lmda_singular, atol=self.tolerance)
-            #        or np.allclose(-lmda, lmda_singular, atol=self.tolerance)):
+            # if np.isclose(gamma_bottom, 0, atol=1e-3):
+            lmda_singular = s / np.linalg.norm(s)
+            if (np.allclose(lmda, lmda_singular, atol=self.tolerance)
+                    or np.allclose(-lmda, lmda_singular, atol=self.tolerance)):
                 S_m[i,0] = 0
                 S_n[i,0] = 0
                 continue
@@ -225,7 +226,6 @@ class Estimator:
             beta_n = dn.T.dot(gamma_top) / gamma_bottom
             S_m[i,0] = beta_m
             S_n[i,0] = beta_n
-        print(S_m, S_n)
         if axis == 'u':
             return None, S_m, S_n
         if axis == 'v':
@@ -278,7 +278,10 @@ class Estimator:
             a_v = S_v.T.dot(S_v)
             b = np.concatenate((diff.T.dot(S_u), diff.T.dot(S_v)))
         A = np.stack((np.concatenate((a_u, a_c)), np.concatenate((a_c, a_v))))
-        assert False, (A, b)
+        A = np.array([
+            [a_u[0,0], a_c[0,0]],
+            [a_c[0,0], a_v[0,0]]
+        ])
         x = np.linalg.solve(A, b)
         if S_u is None:
             return None, x[0, 0], x[1, 0]
@@ -420,10 +423,6 @@ class Estimator:
         S[np.isnan(S)] = math.pi / 2
         S = S.reshape(-1, 1)
         return S
-
-
-def constrain_angle(angle):
-    return np.arctan2(np.sin(angle), np.cos(angle))
 
 
 def shortest_distance(
