@@ -97,6 +97,7 @@ class Controller:
         assert len(modules_beta.shape) == 2 and modules_beta.shape[0] == self.n_modules, modules_beta
         assert len(modules_phi_dot.shape) == 2 and modules_phi_dot.shape[0] == self.n_modules, modules_phi_dot
 
+        # flip_phi is an (n, 1) shaped array of 1 and -1 depending on whether each wheel has been clamped
         beta_clamp, flip_phi = clamp_rotations(modules_beta, modules_phi_dot)
         phi_dot_flip = flip_phi * modules_phi_dot
 
@@ -117,8 +118,10 @@ class Controller:
             )
             return beta_c, phi_dot_c, self.kinematic_model.xi
 
+        # determine lambda based off the clamped beta values
         lmda_e = self.icre.estimate_lmda(beta_clamp)
         assert lmda_e.shape == (3,1), lmda_e
+        # determine mu based off the flipped phi_dot values
         mu_e = self.kinematic_model.estimate_mu(phi_dot_flip, lmda_e)
         if lmda_d is None:
             lmda_d = lmda_e
@@ -155,9 +158,13 @@ class Controller:
             dbeta, d2beta, dphi_dot_p
         )
 
+        # integrate based off modules_beta - the raw steering angles
         beta_c, phi_dot_c = self.integrate_motion(
             beta_dot, beta_2dot, phi_dot_p, phi_2dot_p, modules_beta, delta_t
         )
+
+        # This line theoretically should be here, but it seems to break things if uncommented...
+        # phi_dot_c = phi_dot_c * flip_phi
 
         assert len(beta_c.shape) == 2 and beta_c.shape[0] == self.n_modules, beta_c
         assert len(phi_dot_c.shape) == 2 and phi_dot_c.shape[0] == self.n_modules, phi_dot_c
