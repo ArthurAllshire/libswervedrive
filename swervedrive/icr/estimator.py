@@ -178,9 +178,6 @@ class Estimator:
             of the other two.
         """
         assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
-        # Define the two working axes as m and n
-        S_m = np.zeros(shape=(self.n,1))
-        S_n = np.zeros(shape=(self.n,1))
 
         # Work out the best hemisphere to work in
         u = lmda.T.dot(np.array([[1], [0], [0]]))
@@ -190,42 +187,38 @@ class Estimator:
         axis = max(dots.keys(), key=(lambda k: dots[k]))
         if axis == 'u':
             # Parameterise u
-            dm = np.array([[-lmda[1,0] / lmda[0,0], 1, 0]]).T
-            dn = np.array([[-lmda[2,0] / lmda[0,0], 0, 1]]).T
+            dm = np.array([[-lmda[1,0] / lmda[0,0], 1, 0]])
+            dn = np.array([[-lmda[2,0] / lmda[0,0], 0, 1]])
         elif axis == 'v':
             # Parameterise v
-            dm = np.array([[1, -lmda[0,0] / lmda[1,0], 0]]).T
-            dn = np.array([[0, -lmda[2,0] / lmda[1,0], 1]]).T
+            dm = np.array([[1, -lmda[0,0] / lmda[1,0], 0]])
+            dn = np.array([[0, -lmda[2,0] / lmda[1,0], 1]])
         else:
             # Parameterise w
-            dm = np.array([[1, 0, -lmda[0,0] / lmda[2,0]]]).T
-            dn = np.array([[0, 1, -lmda[1,0] / lmda[2,0]]]).T
+            dm = np.array([[1, 0, -lmda[0,0] / lmda[2,0]]])
+            dn = np.array([[0, 1, -lmda[1,0] / lmda[2,0]]])
 
-        for i in range(self.n):
-            # equations 16 and 17 in the paper
-            a = column(self.a, i)
-            a_orth = column(self.a_orth, i)
-            l = column(self.l_v, i)
-            s = column(self.s, i)
+        lmda_T = lmda.T
+        lmda_T_block = np.concatenate([lmda_T]*self.n)
+        diff = self.a - self.l_v
+        delta = lmda_T.dot(diff)
+        omega = lmda_T.dot(self.a_orth)
+        gamma_top = omega * diff + delta * self.a_orth
+        gamma_bottom = lmda_T.dot(delta * diff - omega * self.a_orth)
+        lmda_singular = (self.s / np.linalg.norm(self.s, axis=0)).T
+        is_singular = np.logical_or(
+            np.all(np.isclose(lmda_T_block, lmda_singular, atol=self.tolerance), axis=1),
+            np.all(np.isclose(lmda_T_block, -lmda_singular, atol=self.tolerance), axis=1)
+        )
+        S_m = dm.dot(gamma_top)
+        S_n = dn.dot(gamma_top)
+        for i,is_sing in enumerate(is_singular):
+            if is_sing:
+                gamma_bottom[0, i] = 1
+                S_m[0, i] = 0
+        S_m = (S_m / gamma_bottom).reshape(-1, 1)
+        S_n = (S_n / gamma_bottom).reshape(-1, 1)
 
-            delta = lmda.T.dot(a - l)
-            omega = lmda.T.dot(a_orth)
-            # equation 18 excluding ∂lmda/∂u
-            gamma_top = omega * (a - l) + delta * a_orth
-            gamma_bottom = lmda.T.dot(delta * (a - l) - omega * a_orth)
-
-            # if np.isclose(gamma_bottom, 0, atol=1e-3):
-            lmda_singular = s / np.linalg.norm(s)
-            if (np.allclose(lmda, lmda_singular, atol=self.tolerance)
-                    or np.allclose(-lmda, lmda_singular, atol=self.tolerance)):
-                S_m[i,0] = 0
-                S_n[i,0] = 0
-                continue
-            # equation 19
-            beta_m = dm.T.dot(gamma_top) / gamma_bottom
-            beta_n = dn.T.dot(gamma_top) / gamma_bottom
-            S_m[i,0] = beta_m
-            S_n[i,0] = beta_n
         if axis == 'u':
             return None, S_m, S_n
         if axis == 'v':
