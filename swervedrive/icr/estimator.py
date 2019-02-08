@@ -270,7 +270,6 @@ class Estimator:
             a_c = S_u.T.dot(S_v)
             a_v = S_v.T.dot(S_v)
             b = np.concatenate((diff.T.dot(S_u), diff.T.dot(S_v)))
-        A = np.stack((np.concatenate((a_u, a_c)), np.concatenate((a_c, a_v))))
         A = np.array([
             [a_u[0,0], a_c[0,0]],
             [a_c[0,0], a_v[0,0]]
@@ -405,17 +404,11 @@ class Estimator:
         :returns: row vector expressing the point.
         """
         assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
-        S = np.zeros(shape=(self.n,))
-        for i in range(self.n):
-            # equations 16 and 17 in the paper
-            a = column(self.a, i)
-            a_orth = column(self.a_orth, i)
-            l = column(self.l_v, i)
-            # fix for the out by pi issue, basically the flip-wheel function below
-            S[i] = math.atan2(lmda.T.dot(a_orth), lmda.T.dot(a - l))
+
+        lmda_T = lmda.T
+        S = np.arctan2(lmda_T.dot(self.a_orth), lmda_T.dot(self.a - self.l_v))
         S[np.isnan(S)] = math.pi / 2
-        S = S.reshape(-1, 1)
-        return S
+        return S.reshape(-1, 1)
 
 
 def shortest_distance(
