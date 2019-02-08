@@ -15,10 +15,10 @@ def unlimited_rotation_controller(
         np.array([[0.1]] * 4),  # modules_r
         np.array([0] * 3),  # epsilon_init
         [-2 * math.pi, 2 * math.pi],  # beta_bounds
-        [-0.5, 0.5],  # beta_dot_bounds
-        [-1e6, 1e6],  # beta_2dot_bounds
-        [-1e6, 1e6],  # phi_dot_bounds
-        [-1e6, 1e6],  # phi_2dot_bounds
+        beta_dot_bounds,  # beta_dot_bounds
+        beta_2dot_bounds,  # beta_2dot_bounds
+        phi_dot_bounds,  # phi_dot_bounds
+        phi_2dot_bounds,  # phi_2dot_bounds
     )
     c.kinematic_model.state = KinematicModel.State.RUNNING
     c._beta_offsets = np.array(c.alpha - np.full((4, 1), math.pi / 2))

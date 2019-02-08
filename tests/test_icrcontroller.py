@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from hypothesis import given, example
+from hypothesis import given, example, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
@@ -47,11 +47,12 @@ def assert_velocity_bounds(c, delta_beta, phi_dot_cmd, dt):
     bounds=st.lists(st.floats(1e-1, 10), min_size=4, max_size=4),
 )
 @example(
-    lmda_d=np.array([[1.00000000e-06, 1.00000004e-06, 1.00000004e-06]]),
+    lmda_d=np.array([[1.00000000e-06, 4.9624216e-06, 4.9624216e-06]]),
     lmda_d_sign=0.0,
-    bounds=[0.1, 0.1, 2.6952844936683134, 0.1],
+    bounds=[0.1, 0.1, 0.1, 0.1],
 )
-def test_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
+@settings(max_examples=100, deadline=1000)
+def test_converge_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
     from swervedrive.icr.kinematicmodel import KinematicModel
 
     # could do this using st.builds but that does not provide a view into what
@@ -79,7 +80,9 @@ def test_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
     mu_e = 0
     lmda_e = c.icre.estimate_lmda(beta_prev)
 
-    while iterations < 50 and not (
+    stop_iter = 200
+
+    while iterations < stop_iter and not (
         np.isclose(shortest_distance(beta_prev, q_d), 0, atol=math.pi * 1 / 180).all()
         and (np.isclose(mu_e, mu_d, atol=1e-2) or np.isclose(-mu_e, mu_d, atol=1e-2))
     ):
@@ -102,7 +105,7 @@ def test_respect_velocity_bounds(lmda_d, lmda_d_sign, bounds):
     lmda_e = c.icre.estimate_lmda(beta_prev)
     mu_e = c.kinematic_model.estimate_mu(phi_dot_prev, lmda_e)
     assert np.isclose(
-        shortest_distance(beta_prev, q_d), 0, atol=math.pi * 1 / 180
+        shortest_distance(beta_prev, q_d), 0, atol=math.pi * 5 / 180
     ).all(), (
         "Controller did not reach target:\n%s\nactual: %s\nbeta history: %s\nlambda history: %s"
         % (lmda_d, lmda_e, beta_history, lmda_history)
@@ -203,7 +206,10 @@ def test_find_path(lmda_initial, lmda_initial_sign, lmda_goal, lmda_goal_sign):
     beta_history = []
     lmda_history = []
     mu_history = []
-    while iterations < 50 and not (
+
+    stop_iter = 50
+
+    while iterations < stop_iter and not (
         np.isclose(shortest_distance(beta_prev, q_d), 0, atol=math.pi * 1 / 180).all()
         and (np.isclose(mu_e, mu_d, atol=1e-1) or np.isclose(-mu_e, mu_d, atol=1e-1))
     ):
@@ -217,7 +223,7 @@ def test_find_path(lmda_initial, lmda_initial_sign, lmda_goal, lmda_goal_sign):
         beta_history.append(beta_cmd)
         mu_history.append(mu_e)
         iterations += 1
-    assert iterations < 50, (
+    assert iterations < stop_iter, (
         "Controller did not reach target:\n%s\nactual: %s\n \
         beta target: %s\nbeta history: %s\nlambda history: %s\nmu target: %s\nmu actual: %s"
         % (lmda_goal, lmda_e, q_d, beta_history, lmda_history, mu_d, mu_history)
