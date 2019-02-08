@@ -425,22 +425,11 @@ def shortest_distance(
     """
     assert len(q_e.shape) == 2 and q_e.shape[1] == 1, q_e
     assert len(q_d.shape) == 2 and q_d.shape[1] == 1, q_d
-    # Iterate because we have to apply joint limits
-    output = np.zeros(q_e.shape)
-    for joint, (qi, beta_i) in enumerate(zip(q_e[:,0], q_d[:,0])):
 
-        if beta_bounds is None:
-            opp_beta = constrain_angle(beta_i + math.pi)
-            diff = constrain_angle(beta_i - qi)
-            opp_diff = constrain_angle(opp_beta - qi)
-
-            if abs(diff) < abs(opp_diff):
-                output[joint] = diff
-            else:
-                output[joint] = opp_diff
-        else:
-            raise NotImplementedError("shortest_distance does not yet support beta_bounds not None")
-    return output
+    # TODO: make this work if beta bounds is not None
+    diff_opp_diff = np.concatenate([constrain_angle(q_d - q_e), constrain_angle(q_d + math.pi - q_e)], axis=1)
+    choose = np.argmin(np.absolute(diff_opp_diff), axis=1).reshape(-1, 1)
+    return np.take_along_axis(diff_opp_diff, choose, axis=1)
 
 
 def column(mat, row_i):
