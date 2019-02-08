@@ -97,10 +97,6 @@ class Controller:
         assert len(modules_beta.shape) == 2 and modules_beta.shape[0] == self.n_modules, modules_beta
         assert len(modules_phi_dot.shape) == 2 and modules_phi_dot.shape[0] == self.n_modules, modules_phi_dot
 
-        # flip_phi is an (n, 1) shaped array of 1 and -1 depending on whether each wheel has been clamped
-        beta_clamp, flip_phi = clamp_rotations(modules_beta, modules_phi_dot)
-        phi_dot_flip = flip_phi * modules_phi_dot
-
         if lmda_d is not None:
             assert lmda_d.shape == (3,1), lmda_d
         if self.kinematic_model.state == KinematicModel.State.RECONFIGURING:
@@ -119,10 +115,10 @@ class Controller:
             return beta_c, phi_dot_c, self.kinematic_model.xi
 
         # determine lambda based off the clamped beta values
-        lmda_e = self.icre.estimate_lmda(beta_clamp)
+        lmda_e = self.icre.estimate_lmda(modules_beta)
         assert lmda_e.shape == (3,1), lmda_e
         # determine mu based off the flipped phi_dot values
-        mu_e = self.kinematic_model.estimate_mu(phi_dot_flip, lmda_e)
+        mu_e = self.kinematic_model.estimate_mu(modules_phi_dot, lmda_e)
         if lmda_d is None:
             lmda_d = lmda_e
         xi_e = self.kinematic_model.compute_odometry(lmda_e, mu_e, delta_t)
@@ -140,7 +136,7 @@ class Controller:
             )
 
             dbeta, d2beta, phi_dot_p, dphi_dot_p = self.kinematic_model.compute_actuators_motion(
-                lmda_e, dlmda, d2lmda, mu_e, dmu
+                lmda_e, dlmda, d2lmda, mu_e, dmu, modules_beta
             )
 
             s_dot_l, s_dot_u, s_2dot_l, s_2dot_u = self.scaler.compute_scaling_bounds(
@@ -162,9 +158,6 @@ class Controller:
         beta_c, phi_dot_c = self.integrate_motion(
             beta_dot, beta_2dot, phi_dot_p, phi_2dot_p, modules_beta, delta_t
         )
-
-        # This line theoretically should be here, but it seems to break things if uncommented...
-        # phi_dot_c = phi_dot_c * flip_phi
 
         assert len(beta_c.shape) == 2 and beta_c.shape[0] == self.n_modules, beta_c
         assert len(phi_dot_c.shape) == 2 and phi_dot_c.shape[0] == self.n_modules, phi_dot_c
@@ -228,22 +221,3 @@ class Controller:
             self.kinematic_model.state = KinematicModel.State.STOPPING
 
         return beta_c, phi_dot_c
-
-
-def clamp_rotations(q, phi_dot):
-    assert len(q.shape) == 2 and q.shape[1] == 1, q
-    assert len(phi_dot.shape) == 2 and phi_dot.shape[1] == 1, phi_dot
-    clamped = np.zeros(q.shape)
-    flip_phi = np.ones(phi_dot.shape)
-    for idx, qi in enumerate(q[:,0]):
-        # constrain angle to +- pi/2
-        constrained = constrain_angle(qi)
-        if abs(constrained) > math.pi/2:
-            if constrained > 0:
-                clamped[idx,0] = constrained - math.pi
-            else:
-                clamped[idx,0] = constrained + math.pi
-            flip_phi[idx,0] = -1.
-        else:
-            clamped[idx, 0] = constrained
-    return clamped, flip_phi

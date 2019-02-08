@@ -145,6 +145,7 @@ class KinematicModel:
         lmda_2dot: np.ndarray,
         mu: float,
         mu_dot: float,
+        modules_beta: np.ndarray
     ):
         """
         Compute the motion of the actuators based on the chassis motion commands.
@@ -166,7 +167,7 @@ class KinematicModel:
                 # We are stopped, so we can reconfigure
                 self.state = KinematicModel.State.RECONFIGURING
 
-        s1_lmda, s2_lmda = self.s_perp(lmda)
+        s1_lmda, s2_lmda = self.s_perp_beta(lmda, modules_beta)
 
         denom = s2_lmda.T.dot(lmda)
         # Any zeros in denom represent an ICR on a wheel axis
@@ -289,6 +290,24 @@ class KinematicModel:
 
         s = self.a_orth.T.dot(lmda)
         c = (self.a - self.l_vector).T.dot(lmda)
+        s1_lmda = (
+            np.multiply(s, (self.a - self.l_vector).T) - np.multiply(c, self.a_orth.T)
+        ).T
+        s2_lmda = (
+            np.multiply(c, (self.a - self.l_vector).T) + np.multiply(s, self.a_orth.T)
+        ).T
+
+        assert s1_lmda.shape == (3, self.n_modules)
+        assert s2_lmda.shape == (3, self.n_modules)
+
+        return s1_lmda, s2_lmda
+
+    def s_perp_beta(self, lmda: np.ndarray, beta: np.ndarray):
+
+        assert lmda.shape == (3,1), lmda
+
+        s = np.sin(beta)
+        c = np.cos(beta)
         s1_lmda = (
             np.multiply(s, (self.a - self.l_vector).T) - np.multiply(c, self.a_orth.T)
         ).T
