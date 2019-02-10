@@ -10,6 +10,7 @@ max_iter = 50  # TODO: figure out what value should be
 tolerance = 1e-3
 
 
+#pythran export make_vectors(float[:], float[:])
 def make_vectors(alpha, l):
     """
     Form the vectors required to efficiently run the estimator
@@ -19,16 +20,35 @@ def make_vectors(alpha, l):
         the origin of the chassis frame
     :returns: a, a_orth, s, l_v: vectors required to run the estimator
     """
-    assert len(alpha.shape) == 2 and alpha.shape[1] == 1, alpha
-    assert len(l.shape) == 2 and l.shape[1] == 1, l
-    n = len(alpha)
-    a = np.concatenate([np.cos(alpha).T, np.sin(alpha).T, [[0.0] * n]])
-    a_orth = np.concatenate([-np.sin(alpha).T, np.cos(alpha).T, [[0.0] * n]])
-    s = np.concatenate([(l * np.cos(alpha)).T, (l * np.sin(alpha)).T, [[1.0] * n]])
-    l_v = np.concatenate([[[0.0] * n], [[0.0] * n], l.T])
+    assert len(alpha.shape) == 2 and alpha.shape[1] == 1, str(alpha)
+    assert len(l.shape) == 2 and l.shape[1] == 1, str(l)
+
+    n = alpha.shape[0]
+
+    alpha_row = alpha.reshape(-1)
+    one_row = np.ones(alpha_row.shape)
+    l_row = l.reshape(-1)
+
+    cos = np.cos(alpha_row)
+    sin = np.sin(alpha_row)
+
+    a = np.zeros((3, n))
+    a[0] = cos
+    a[1] = sin
+    a_orth = np.zeros((3, n))
+    a_orth[0] = -sin
+    a_orth[1] = cos
+    s = np.zeros((3, n))
+    s[0] = l_row * cos
+    s[1] = l_row * sin
+    s[2] = one_row
+    l_v = np.zeros((3, n))
+    l_v[2] = l_row
+
     return a, a_orth, s, l_v
 
 
+#pythran export estimate_lmda(float[:],float[:],float[:],float[:],float[:],float[:])
 def estimate_lmda(q, alpha, a, a_orth, s, l_v):
     """
     Find the ICR given the steering angles.
@@ -41,25 +61,30 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
     :param l_v: return value from make_vectors
     :returns: our estimate of ICR as the array (u, v, w)^T.
     """
+    return np.array([[1], [0], [0]])
     assert len(alpha.shape) == 2 and alpha.shape[1] == 1, alpha
     assert len(q.shape) == 2 and q.shape[1] == 1, q
     n = q.shape[0]
     starting_points = select_starting_points(q, alpha, a, a_orth, s, l_v, n)
     found = False
-    closest_lmda = None
-    closest_dist = None
+    # not initialzed yet, but have these here for scoping
+    closest_lmda = np.zeros(shape=(3, 1))
+    closest_lmda_init = False
+    closest_dist = -1.
     for lmda_start in starting_points:
         lmda = lmda_start
-        if closest_lmda is None:
+        if not closest_lmda_init:
             closest_lmda = lmda_start
+            closest_lmda_init = True
             closest_dist = np.linalg.norm(shortest_distance(q, S(lmda_start, a, a_orth, l_v)))
         if np.linalg.norm(shortest_distance(q, S(lmda, a, a_orth, l_v))) < eta_delta:
             found = True
         else:
-            last_singularity = None
-            for i in range(max_iter):
+            last_singularity = -1
+            i = 0
+            while i < max_iter:
                 S_u, S_v, S_w, none_axis = compute_derivatives(lmda, a, a_orth, s, l_v, n)
-                if last_singularity is not None:
+                if last_singularity is not -1:
                     # if we had a singularity last time, set the derivatives
                     # for the corresponding wheel to 0
                     if S_u is not None:
@@ -74,7 +99,7 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
                 )
                 singularity, singularity_number = handle_singularities(lmda_t, s, n)
                 S_lmda = S(lmda_t, a, a_orth, l_v)
-                if last_singularity is not None and singularity:
+                if last_singularity is not -1 and singularity:
                     # the test point is still on the steering axis, suggesting
                     # it is on a singularity. Set beta_k to the input steering
                     # value
@@ -96,6 +121,7 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
                 lmda = lmda_t
                 if found:
                     break
+                i += 1
         if found:
             lmda = lmda.reshape(-1, 1)
             # Always return lamdba with a positive w component
@@ -111,7 +137,7 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
 
 def select_starting_points(q, alpha,
                            a, a_orth,
-                           s, l_v, n: int):
+                           s, l_v, n):
     """
     Find the starting points for the Newton-Raphson algorithm. This
     implementation places them at the intersection of the propulsion axis
@@ -170,12 +196,12 @@ def select_starting_points(q, alpha,
     for i in range(len(dists)):
         smallest_arg = np.argmin(dists)
         starting_points.append(cs.pop(smallest_arg).reshape(3, 1))
-        dists.pop(smallest_arg())
+        dists.pop(smallest_arg)
     return starting_points
 
 
 def compute_derivatives(lmda, a, a_orth, s,
-                        l_v, n: int):
+                        l_v, n):
     """
     Compute the derivateves of the constraining surface at the current
     estimate of the point.
@@ -246,7 +272,7 @@ def solve(
     S_u,
     S_v,
     S_w,
-    none_axis: str,
+    none_axis,
     q,
     lmda,
     a,
@@ -311,13 +337,13 @@ def solve(
     else:
         return x[0, 0], x[1, 0], None
 
-# TODO: don't mix none polymorphic variables
+
 def update_parameters(
     lmda,
-    delta_u: float,
-    delta_v: float,
-    delta_w: float,
-    none_axis: str,
+    delta_u,
+    delta_v,
+    delta_w,
+    none_axis,
     q,
     a,
     a_orth,
@@ -417,7 +443,7 @@ def update_parameters(
             return lmda_t(m_i, n_i), False
 
 
-def handle_singularities(lmda, s, n: int):
+def handle_singularities(lmda, s, n):
     """
     Handle the structural singularities that may have been produced when
     the parameters were updated (when the ICR lies on a steering axis).
@@ -477,7 +503,7 @@ def shortest_distance(
     assert len(q_d.shape) == 2 and q_d.shape[1] == 1, q_d
 
     # TODO: make this work if beta bounds is not None
-    diff_opp_diff = np.concatenate([constrain_angle(q_d - q_e), constrain_angle(q_d + math.pi - q_e)], axis=1)
+    diff_opp_diff = np.hstack((constrain_angle(q_d - q_e), constrain_angle(q_d + math.pi - q_e)))
     choose = np.argmin(np.absolute(diff_opp_diff), axis=1).reshape(-1)
     taken = np.zeros(shape=q_e.shape)
     for i, argmin in enumerate(choose):
