@@ -10,7 +10,6 @@ max_iter = 50  # TODO: figure out what value should be
 tolerance = 1e-3
 
 
-#pythran export make_vectors(float[:], float[:])
 def make_vectors(alpha, l):
     """
     Form the vectors required to efficiently run the estimator
@@ -48,7 +47,6 @@ def make_vectors(alpha, l):
     return a, a_orth, s, l_v
 
 
-#pythran export estimate_lmda(float[:],float[:],float[:],float[:],float[:],float[:])
 def estimate_lmda(q, alpha, a, a_orth, s, l_v):
     """
     Find the ICR given the steering angles.
@@ -61,11 +59,11 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
     :param l_v: return value from make_vectors
     :returns: our estimate of ICR as the array (u, v, w)^T.
     """
-    return np.array([[1], [0], [0]])
-    assert len(alpha.shape) == 2 and alpha.shape[1] == 1, alpha
-    assert len(q.shape) == 2 and q.shape[1] == 1, q
+    assert len(alpha.shape) == 2 and alpha.shape[1] == 1, str(alpha)
+    assert len(q.shape) == 2 and q.shape[1] == 1, str(q)
     n = q.shape[0]
     starting_points = select_starting_points(q, alpha, a, a_orth, s, l_v, n)
+    return starting_points[0]
     found = False
     # not initialzed yet, but have these here for scoping
     closest_lmda = np.zeros(shape=(3, 1))
@@ -81,8 +79,7 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
             found = True
         else:
             last_singularity = -1
-            i = 0
-            while i < max_iter:
+            for i in range(max_iter):
                 S_u, S_v, S_w, none_axis = compute_derivatives(lmda, a, a_orth, s, l_v, n)
                 if last_singularity is not -1:
                     # if we had a singularity last time, set the derivatives
@@ -121,7 +118,6 @@ def estimate_lmda(q, alpha, a, a_orth, s, l_v):
                 lmda = lmda_t
                 if found:
                     break
-                i += 1
         if found:
             lmda = lmda.reshape(-1, 1)
             # Always return lamdba with a positive w component
@@ -156,7 +152,7 @@ def select_starting_points(q, alpha,
     their distance to the input length.
     """
     starting_points = []
-    assert len(q.shape) == 2 and q.shape[1] == 1, q
+    assert len(q.shape) == 2 and q.shape[1] == 1, str(q)
 
     def get_p(i):
         s_col = column(s, i).reshape(-1)
@@ -217,7 +213,7 @@ def compute_derivatives(lmda, a, a_orth, s,
         One of them will be None because that axis is parameterised in terms
         of the other two.
     """
-    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
+    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, str(lmda)
 
     # Work out the best hemisphere to work in
     axes = ['u', 'v', 'w']
@@ -296,13 +292,13 @@ def solve(
     :param n: number of wheels
     :returns: the free parameters in the form (delta_u, delta_v, delta_w).
     """
-    assert len(q.shape) == 2 and q.shape[1] == 1, q
+    assert len(q.shape) == 2 and q.shape[1] == 1, str(q)
     # if S_u is not None:
-    #     assert len(S_u.shape) == 2 and S_u.shape[1] == 1, S_u
+    #     assert len(S_u.shape) == 2 and S_u.shape[1] == 1, str(S_u)
     # if S_v is not None:
-    #     assert len(S_v.shape) == 2 and S_v.shape[1] == 1, S_v
+    #     assert len(S_v.shape) == 2 and S_v.shape[1] == 1, str(S_v)
     # if S_w is not None:
-    #     assert len(S_w.shape) == 2 and S_w.shape[1] == 1, S_w
+    #     assert len(S_w.shape) == 2 and S_w.shape[1] == 1, str(S_w)
     p_zero = S(lmda, a, a_orth, l_v)
     diff = q - p_zero
     a_u = np.zeros((1,1))
@@ -372,8 +368,8 @@ def update_parameters(
         algorithm for this starting point.
     """
     # Move along the non-parameterised axes. Call these m and n
-    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
-    assert lmda.shape == (3, 1), lmda
+    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, str(lmda)
+    assert lmda.shape == (3, 1), str(lmda)
     if none_axis == "u":
         m = lmda[1, 0]
         n = lmda[2, 0]
@@ -453,7 +449,7 @@ def handle_singularities(lmda, s, n):
     :returns: if the ICR is on a structural singularity, and the wheel
         number which the singularity is on if there is one
     """
-    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
+    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, str(lmda)
     wheel_number = None
     for i in range(n):
         # equations 16 and 17 in the paper
@@ -479,7 +475,7 @@ def S(lmda,
     :param n: number of wheels
     :returns: row vector expressing the point.
     """
-    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, lmda
+    assert len(lmda.shape) == 2 and lmda.shape[1] == 1, str(lmda)
 
     lmda_T = lmda.T
     S = np.arctan2(lmda_T.dot(a_orth), lmda_T.dot(a - l_v))
@@ -488,7 +484,8 @@ def S(lmda,
 
 
 def shortest_distance(
-    q_e, q_d, beta_bounds = None
+    q_e, q_d
+    # TODO: re-add support for beta_bounds here, it broke pythran
 ):
     """
     Determine if the rotation each wheel needs to make to get to the target.
@@ -499,8 +496,8 @@ def shortest_distance(
     :returns: an array of the same length as the input arrays with each component
         as the correct distance of q_e to q_d.
     """
-    assert len(q_e.shape) == 2 and q_e.shape[1] == 1, q_e
-    assert len(q_d.shape) == 2 and q_d.shape[1] == 1, q_d
+    assert len(q_e.shape) == 2 and q_e.shape[1] == 1, str(q_e)
+    assert len(q_d.shape) == 2 and q_d.shape[1] == 1, str(q_d)
 
     # TODO: make this work if beta bounds is not None
     diff_opp_diff = np.hstack((constrain_angle(q_d - q_e), constrain_angle(q_d + math.pi - q_e)))

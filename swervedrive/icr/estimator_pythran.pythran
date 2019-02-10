@@ -1,0 +1,2 @@
+pythran export make_vectors(float[:], float[:])
+pythran export estimate_lmda(float[:],float[:],float[:],float[:],float[:],float[:])
