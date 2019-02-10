@@ -2,7 +2,7 @@ from enum import Enum
 import math
 import numpy as np
 
-from swervedrive.icr.estimator import shortest_distance
+from swervedrive.icr.estimator_pythran import shortest_distance
 
 
 def cartesian_to_lambda(x, y):

@@ -1,2 +1,4 @@
 pythran export make_vectors(float[:], float[:])
 pythran export estimate_lmda(float[:],float[:],float[:],float[:],float[:],float[:])
+pythran export S(float[:], float[:], float[:], float[:])
+pythran export shortest_distance(float[:], float[:])

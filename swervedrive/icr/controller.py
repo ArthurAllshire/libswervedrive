@@ -1,4 +1,4 @@
-from .estimator import Estimator
+from .estimator_pythran import make_vectors, estimate_lmda, S
 from .kinematicmodel import KinematicModel
 from .timescaler import TimeScaler
 from .utils import constrain_angle
@@ -69,7 +69,7 @@ class Controller:
         self.phi_dot_bounds = phi_dot_bounds
         self.phi_2dot_bounds = phi_2dot_bounds
 
-        self.icre = Estimator(epsilon_init, self.alpha, self.l)
+        self.a, self.a_orth, self.s, self.l_v = make_vectors(self.alpha, self.l)
 
         self.kinematic_model = KinematicModel(
             self.alpha, self.l, self.b, self.r, k_beta=40
@@ -104,7 +104,7 @@ class Controller:
             # in the reconfiguring state - so we must simply discard this command
             if lmda_d is None:
                 return modules_beta, modules_phi_dot, self.kinematic_model.xi
-            beta_d = self.icre.S(lmda_d)
+            beta_d = S(lmda_d, self.a, self.a_orth, self.l_v)
             dbeta = self.kinematic_model.reconfigure_wheels(beta_d, modules_beta)
             d2beta = np.array([[0]] * len(dbeta))
             phi_dot_c = np.array([[0]] * len(dbeta))
@@ -115,7 +115,7 @@ class Controller:
             return beta_c, phi_dot_c, self.kinematic_model.xi
 
         # determine lambda based off the clamped beta values
-        lmda_e = self.icre.estimate_lmda(modules_beta)
+        lmda_e = estimate_lmda(modules_beta, self.alpha, self.a, self.a_orth, self.s, self.l_v)
         assert lmda_e.shape == (3,1), lmda_e
         # determine mu based off the flipped phi_dot values
         mu_e = self.kinematic_model.estimate_mu(modules_phi_dot, lmda_e)

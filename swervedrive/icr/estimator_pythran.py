@@ -463,7 +463,7 @@ def handle_singularities(lmda, s, n):
 def S(lmda,
       a,
       a_orth,
-      l_v,
+      l_v
       ):
     """
     Compute the point in the joint space (space of all beta steering angle
