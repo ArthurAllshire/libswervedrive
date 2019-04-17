@@ -1,7 +1,11 @@
 #ifndef libswervedrive_estimator_h
 #define libswervedrive_estimator_h
 
+#include <vector>
+
 #include <Eigen/Dense>
+
+#include "libswervedrive/types.h"
 
 namespace libswervedrive {
 
