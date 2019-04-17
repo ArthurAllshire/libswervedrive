@@ -3,12 +3,12 @@
 
 #include <Eigen/Dense>
 
-#include <cassert>
+#include <vector>
 
 namespace libswervedrive {
 
 // velocity bounds
-using Bounds = Eigen::Vector2d;
+using Bounds = std::vector<double>;
 // position of the robot in terms of [x, y, theta]
 using Epsilon = Eigen::Vector3d;
 // icr of the robot in terms of the spherical parametrisation (u, v, w)
