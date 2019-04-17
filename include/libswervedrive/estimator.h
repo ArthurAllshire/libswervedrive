@@ -9,9 +9,6 @@
 
 namespace libswervedrive {
 
-using Epsilon = Eigen::Vector3d;
-using Lambda = Eigen::Vector4d;
-
 class Estimator {
 public:
   Estimator(Eigen::VectorXd alpha, Eigen::VectorXd l);
