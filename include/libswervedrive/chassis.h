@@ -8,7 +8,7 @@
 namespace libswervedrive {
 
 // velocity bounds
-using Bounds = std::vector<double>;
+using Bounds = std::vector<Eigen::Vector2d>;
 // position of the robot in terms of [x, y, theta]
 using Epsilon = Eigen::Vector3d;
 // icr of the robot in terms of the spherical parametrisation (u, v, w)
@@ -29,7 +29,7 @@ struct Chassis {
         phi_dot_bounds(phi_dot_bounds), phi_2dot_bounds(phi_2dot_bounds) {
             // TODO: initialisation of matrices
         };
-    
+
     // number of wheels
     int n;
     // array containing the angle to each of the modules
@@ -46,7 +46,7 @@ struct Chassis {
     // Min/max allowable value for rotation rate of modules, in rad/s
     Bounds beta_dot_bounds;
     // Min/max allowable value for the angular acceleration of the modules, in rad/s^2.
-    Bounds beta_2dot_bounds; 
+    Bounds beta_2dot_bounds;
     // Min/max allowable value for rotation rate of module wheels, in rad/s
     Bounds phi_dot_bounds;
     // Min/max allowable value for the angular acceleration of the module wheels, in rad/s^2.

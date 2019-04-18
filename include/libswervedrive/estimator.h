@@ -5,7 +5,7 @@
 
 #include <Eigen/Dense>
 
-#include "libswervedrive/types.h"
+#include "libswervedrive/chassis.h"
 
 namespace libswervedrive {
 
