@@ -11,9 +11,9 @@ namespace swervedrive {
 
 class Estimator {
 public:
-  Estimator(Eigen::VectorXd alpha, Eigen::VectorXd l);
-  Estimator(Eigen::VectorXd alpha, Eigen::VectorXd l, Epsilon init);
-  ~Estimator();
+  Estimator(Chassis chassis);
+  Estimator(Chassis chassis, Epsilon init);
+  ~Estimator() = default;
 
   Eigen::Vector3d compute_derivatives(Lambda lambda);
   Lambda estimate_lambda();
@@ -24,7 +24,8 @@ public:
   Lambda update_parameters(Lambda lambda, Eigen::Vector3d deltas, Eigen::VectorXd q);
 
 protected:
-
+  Chassis chassis_;
+  Epsilon epsilon_;
 };
 }
 
