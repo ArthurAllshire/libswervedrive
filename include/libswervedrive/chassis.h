@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace libswervedrive {
+namespace swervedrive {
 
 // velocity bounds
 using Bounds = std::vector<Eigen::Vector2d>;

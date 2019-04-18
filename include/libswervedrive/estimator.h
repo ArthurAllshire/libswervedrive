@@ -7,7 +7,7 @@
 
 #include "libswervedrive/chassis.h"
 
-namespace libswervedrive {
+namespace swervedrive {
 
 class Estimator {
 public:
