@@ -29,9 +29,8 @@ struct Chassis {
         alpha(alpha), l(l), b(b), r(r),
         beta_dot_bounds(beta_dot_bounds), beta_2dot_bounds(beta_2dot_bounds),
         phi_dot_bounds(phi_dot_bounds), phi_2dot_bounds(phi_2dot_bounds)
-    { 
-        n = alpha.size()(0);
-        using ModuleParam = Eigen::Matrix<double, this->n, 1>
+    {
+        n = alpha.size();
     };
 
     // number of wheels
