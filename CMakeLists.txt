@@ -4,4 +4,7 @@ project (libswervedrive)
 
 set (CMAKE_CXX_STANDARD 17)
 
+enable_testing()
+
 add_subdirectory(src bin)
+add_subdirectory(src/tests bin/tests)
