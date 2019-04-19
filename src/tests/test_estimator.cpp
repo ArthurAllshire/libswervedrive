@@ -16,7 +16,7 @@ TEST(EstimatorTest, ConvertsLambdaToQ) {
       beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds);
   Estimator e(c);
 
-  auto q = e.S(Lambda(0, 0, 1));
+  auto q = e.lambda_to_betas(Lambda(0, 0, 1));
   EXPECT_EQ(q.size(), 4);
   VectorXd expected = VectorXd::Zero(4);
   EXPECT_TRUE(q.isApprox(expected)) << "Expected: " << expected << " Calculated: " << q;

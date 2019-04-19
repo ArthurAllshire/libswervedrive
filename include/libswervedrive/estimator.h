@@ -33,7 +33,7 @@ public:
   Derivatives compute_derivatives(Lambda lambda);
   Lambda estimate_lambda();
   int handle_singularities(Lambda lambda);
-  Eigen::VectorXd S(Lambda lambda);
+  Eigen::VectorXd lambda_to_betas(Lambda lambda);
   std::vector<Lambda> select_starting_points(Eigen::VectorXd q);
   Eigen::Vector3d solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
   Lambda update_parameters(Lambda lambda, Eigen::Vector3d deltas, Eigen::VectorXd q);
