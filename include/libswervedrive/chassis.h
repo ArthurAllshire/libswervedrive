@@ -31,12 +31,12 @@ struct Chassis {
         phi_dot_bounds(phi_dot_bounds), phi_2dot_bounds(phi_2dot_bounds)
     {
         n = alpha.size();
-        a = Eigen::MatrixXd(n, 3);
-        a << cos(alpha.array()), sin(alpha.array()), Eigen::VectorXd::Zero(n);
-        a_orth = Eigen::MatrixXd(n, 3);
-        a_orth << -sin(alpha.array()), cos(alpha.array()), Eigen::VectorXd::Zero(n);
-        l_v = Eigen::MatrixXd(n, 3);
-        l_v << Eigen::MatrixXd::Zero(n, 2), l;
+        a = Eigen::MatrixXd(3, n);
+        a << cos(alpha.array()).transpose(), sin(alpha.array()).transpose(), Eigen::VectorXd::Zero(n).transpose();
+        a_orth = Eigen::MatrixXd(3, n);
+        a_orth << -sin(alpha.array()).transpose(), cos(alpha.array()).transpose(), Eigen::VectorXd::Zero(n).transpose();
+        l_v = Eigen::MatrixXd(3, n);
+        l_v << Eigen::MatrixXd::Zero(2, n), l.transpose();
     };
 
     // number of wheels

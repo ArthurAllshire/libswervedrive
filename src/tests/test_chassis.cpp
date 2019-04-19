@@ -16,12 +16,12 @@ TEST(ChassisTest, InitialisesDerivedMatrices) {
   EXPECT_EQ(c.n, 4);
 
   EXPECT_EQ(c.a(0,0), 1);
-  EXPECT_EQ(c.a(0,1), 0);
-  EXPECT_EQ(c.a(0,2), 0);
+  EXPECT_EQ(c.a(1,0), 0);
+  EXPECT_EQ(c.a(2,0), 0);
 
   EXPECT_EQ(c.a_orth(0,0), 0);
-  EXPECT_EQ(c.a_orth(0,1), 1);
-  EXPECT_EQ(c.a_orth(0,2), 0);
+  EXPECT_EQ(c.a_orth(1,0), 1);
+  EXPECT_EQ(c.a_orth(2,0), 0);
 
-  EXPECT_EQ(c.l_v(0,2), 1);
+  EXPECT_EQ(c.l_v(2,0), 1);
 }

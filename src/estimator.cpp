@@ -12,14 +12,14 @@ Estimator::Estimator(Chassis chassis) : Estimator(chassis, Epsilon(0,0,0)) {};
   :returns: row vector expressing the point.
  */
 Eigen::VectorXd Estimator::S(Lambda lambda) {
-        auto y = (lambda.transpose() * chassis_.a_orth).diagonal();
-        auto x = (lambda.transpose() * (chassis_.a - chassis_.l_v)).diagonal();
-        Eigen::VectorXd S(chassis_.n);
-        for (int idx=0; idx < chassis_.n; ++idx) {
-          S[idx] = atan2(y[idx], x[idx]);
-          // TODO S[np.isnan(S)] = math.pi / 2
-        }
-        return S;
+  auto y = (chassis_.a_orth.transpose() * lambda);
+  auto x = ((chassis_.a - chassis_.l_v).transpose() * lambda);
+  Eigen::VectorXd S(chassis_.n);
+  for (int idx=0; idx < chassis_.n; ++idx) {
+    S[idx] = atan2(y[idx], x[idx]);
+    // TODO S[np.isnan(S)] = math.pi / 2
+  }
+  return S;
 }
 
 }
