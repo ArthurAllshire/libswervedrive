@@ -1,6 +1,7 @@
 #ifndef libswervedrive_estimator_h
 #define libswervedrive_estimator_h
 
+#include <optional>
 #include <vector>
 
 #include <Eigen/Dense>
@@ -8,6 +9,10 @@
 #include "libswervedrive/chassis.h"
 
 namespace swervedrive {
+struct Derivatives {
+  std::optional<Eigen::VectorXd> u, v, w;
+};
+
 
 class Estimator {
 public:
@@ -19,13 +24,12 @@ public:
   // configurations at lambda
   // returns (S_u, S_v, S_w), the vectors containing the derivatives of each steering angle
   // with respect to u, v, and w respectively
-  // null_axis is the index of the axis that the derivatives are not parametrised in terms of
-  std::vector<Eigen::Vector3d> compute_derivatives(Lambda lambda, int& null_axis);
+  Derivatives compute_derivatives(Lambda lambda);
   Lambda estimate_lambda();
   int handle_singularities(Lambda lambda);
   Eigen::VectorXd S(Lambda lambda);
   std::vector<Lambda> select_starting_points(Eigen::VectorXd q);
-  Eigen::Vector3d solve(Eigen::Vector3d derivatives, Eigen::VectorXd q, Lambda lambda);
+  Eigen::Vector3d solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
   Lambda update_parameters(Lambda lambda, Eigen::Vector3d deltas, Eigen::VectorXd q);
 
 protected:
