@@ -32,11 +32,11 @@ struct Chassis {
     {
         n = alpha.size();
         a = Eigen::MatrixXd(n, 3);
-        a << cos(alpha.transpose().array()), sin(alpha.transpose().array()), Eigen::VectorXd(n);
+        a << cos(alpha.array()), sin(alpha.array()), Eigen::VectorXd::Zero(n);
         a_orth = Eigen::MatrixXd(n, 3);
-        a << -sin(alpha.transpose().array()), cos(alpha.transpose().array()), Eigen::VectorXd(n);
+        a_orth << -sin(alpha.array()), cos(alpha.array()), Eigen::VectorXd::Zero(n);
         l_v = Eigen::MatrixXd(n, 3);
-        l_v << Eigen::MatrixXd(n, 2), l.transpose();
+        l_v << Eigen::MatrixXd::Zero(n, 2), l;
     };
 
     // number of wheels
