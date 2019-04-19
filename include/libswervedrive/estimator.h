@@ -16,8 +16,14 @@ struct Derivatives {
 
 class Estimator {
 public:
-  Estimator(Chassis chassis);
-  Estimator(Chassis chassis, Epsilon init);
+  Estimator(Chassis chassis,
+    Epsilon init = Eigen::VectorXd::Zero(3, 1),
+    double eta_lambda=1e-4,
+    double eta_delta=1e-2,
+    double min_delta_line_search=1e-2,
+    double max_iter_lambda=50,
+    double singularity_tolerance=1e-3
+    );
   ~Estimator() = default;
 
   // compute the derivatives of the constraining surface in the space of all possible wheel
@@ -38,17 +44,17 @@ protected:
 
   // threshold when we assume the algorithm has converged to the correct icr based on how much
   // lambda has moved between sucessive iterations
-  const double eta_lambda = 1e-4;
+  double eta_lambda_ = 1e-4;
   // threshold below which a starting point for iterative icr iteration is selected based on the norm
   // between the measured wheel positions and the wheel positions obtained from that starting point
-  const double eta_delta = 1e-2;
+  double eta_delta_ = 1e-2;
   // minimum size of the free parameters delta_m and delta_m to avoid infinate recursion in the line
   // search for the next iteration of the position of lambda
-  const double min_delta_size = 1e-2;
+  double min_delta_line_search_ = 1e-2;
   // maximum iterations allowed for the iterative icr estimation algorithm to converge on one point
-  const double max_iter = 50;
+  double max_iter_lambda_ = 50;
   // how close a point must be to be considered to be 'on a structural singularity'
-  const double singularity_tolerance = 1e-3;
+  double singularity_tolerance_ = 1e-3;
 };
 }
 
