@@ -31,6 +31,12 @@ struct Chassis {
         phi_dot_bounds(phi_dot_bounds), phi_2dot_bounds(phi_2dot_bounds)
     {
         n = alpha.size();
+        a = Eigen::MatrixXd(n, 3);
+        a << cos(alpha.transpose().array()), sin(alpha.transpose().array()), Eigen::VectorXd(n);
+        a_orth = Eigen::MatrixXd(n, 3);
+        a << -sin(alpha.transpose().array()), cos(alpha.transpose().array()), Eigen::VectorXd(n);
+        l_v = Eigen::MatrixXd(n, 3);
+        l_v << Eigen::MatrixXd(n, 2), l.transpose();
     };
 
     // number of wheels
@@ -39,6 +45,10 @@ struct Chassis {
     // measured counter clockwise from the x-axis in radians
     Eigen::VectorXd alpha;
     // horizontal distance from the origin to the axis of rotation of each wheel
+    Eigen::MatrixXd a;
+    Eigen::MatrixXd a_orth;
+    Eigen::MatrixXd l_v;
+
     Eigen::VectorXd l;
     //  horizontal distance from the axis of rotation of each module to its contact with the gound
     Eigen::VectorXd b;
