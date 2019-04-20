@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <Eigen/Dense>
+#include <cmath>
 
 #include "libswervedrive/chassis.h"
 
@@ -118,6 +119,9 @@ protected:
   double min_delta_line_search_ = 1e-2;
   double max_iter_lambda_ = 50;
   double singularity_tolerance_ = 1e-3;
+
+  //! Threshold to prevent division by (nearly) zero
+  const double numerical_zero_thresh_ = 1e-5;
 };
 }
 

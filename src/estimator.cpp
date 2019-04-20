@@ -18,10 +18,14 @@ Estimator::Estimator(Chassis chassis, Epsilon init, double eta_lambda,
 Eigen::VectorXd Estimator::lambda_to_betas(Lambda lambda) {
   auto y = (chassis_.a_orth.transpose() * lambda);
   auto x = ((chassis_.a - chassis_.l_v).transpose() * lambda);
+  // the steering angles array to be returned
   Eigen::VectorXd S(chassis_.n);
   for (int idx=0; idx < chassis_.n; ++idx) {
-    S[idx] = atan(y[idx]/x[idx]);
-    // TODO S[np.isnan(S)] = math.pi / 2
+    if (abs(x[idx]) < numerical_zero_thresh_) {
+      S[idx] = M_PI / 2;
+    } else {
+      S[idx] = atan(y[idx]/x[idx]);
+    }
   }
   return S;
 }
