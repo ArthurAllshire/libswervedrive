@@ -75,10 +75,12 @@ public:
    */
   int handle_singularities(Lambda lambda);
   /**
-   * @brief 
+   * @brief Calculate wheel positions from ICR. 
    * 
-   * @param lambda 
-   * @return Eigen::VectorXd 
+   * Computes the point in the joint space (space of all beta steering angle values) associated with a particular ICR.
+   * 
+   * @param lambda the ICR to compute the point for.
+   * @return Eigen::VectorXd row vector expressing the point. 
    */
   Eigen::VectorXd lambda_to_betas(Lambda lambda);
   /**

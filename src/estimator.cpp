@@ -15,12 +15,6 @@ Estimator::Estimator(Chassis chassis, Epsilon init, double eta_lambda,
   singularity_tolerance_(singularity_tolerance)
 {};
 
-/**
-  Compute the point in the joint space (space of all beta steering angle
-  values) associated with a particular ICR.
-  :param lambda: the ICR to compute the point for.
-  :returns: row vector expressing the point.
- */
 Eigen::VectorXd Estimator::lambda_to_betas(Lambda lambda) {
   auto y = (chassis_.a_orth.transpose() * lambda);
   auto x = ((chassis_.a - chassis_.l_v).transpose() * lambda);

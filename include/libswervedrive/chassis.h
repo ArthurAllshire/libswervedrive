@@ -22,8 +22,8 @@ struct Chassis {
   /**
    * @brief Construct a new Chassis object
    * 
-   * @param Alpha array containing the angle to each of the modules measured counter clockwise from the x-axis in radians
-   * @param l Discance from the centre of the robot to each module's steering axis, in m
+   * @param alpha Array containing the angle to each of the modules measured counter clockwise from the x-axis in radians
+   * @param l Distance from the centre of the robot to each module's steering axis, in m
    * @param b Horizontal distance from the axis of rotation of each module to its contact with the gound, in m
    * @param r Radii of the wheels, in m
    * @param beta_bounds Min/max allowable value for steering angle, in rad.
@@ -68,7 +68,7 @@ struct Chassis {
 
   //! Array containing the angle to each of the modules measured counter clockwise from the x-axis in radians
   Eigen::VectorXd alpha;
-  //! Discance from the centre of the robot to each module's steering axis, in m
+  //! Distance from the centre of the robot to each module's steering axis, in m
   Eigen::VectorXd l;
   //! Horizontal distance from the axis of rotation of each module to its contact with the gound, in m
   Eigen::VectorXd b;
