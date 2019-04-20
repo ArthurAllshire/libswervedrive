@@ -20,7 +20,7 @@ Eigen::VectorXd Estimator::lambda_to_betas(Lambda lambda) {
   auto x = ((chassis_.a - chassis_.l_v).transpose() * lambda);
   Eigen::VectorXd S(chassis_.n);
   for (int idx=0; idx < chassis_.n; ++idx) {
-    S[idx] = atan2(y[idx], x[idx]);
+    S[idx] = atan(y[idx]/x[idx]);
     // TODO S[np.isnan(S)] = math.pi / 2
   }
   return S;
