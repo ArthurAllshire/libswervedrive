@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <Eigen/Dense>
-#include <cmath>
 
 #include "libswervedrive/chassis.h"
 
