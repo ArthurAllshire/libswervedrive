@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 
 #include <vector>
+#include <optional>
 
 namespace swervedrive
 {
