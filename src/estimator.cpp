@@ -1,5 +1,7 @@
 #include "libswervedrive/estimator.h"
 
+#include <utility>
+
 namespace swervedrive
 {
 Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, double eta_delta,
@@ -16,8 +18,103 @@ Lambda Estimator::estimate(Eigen::VectorXd q)
 {
 }
 
+/**
+  Compute the derivatives of the constraining surface at the current
+  estimate of the point.
+  :param lmda: position of the ICR estimate
+  :returns: np.ndarray with (S_u, S_v, S_w). S_u, S_v, S_w are the vectors
+  containing the derivatives of each steering angle in q with respect
+  u, v and w respectively.
+  One of them will be None because that axis is parameterised in terms
+  of the other two.
+ */
 Derivatives Estimator::compute_derivatives(Lambda lambda)
 {
+  using namespace Eigen;
+  using namespace std;
+  using namespace swervedrive;
+  // Work out the best hemisphere to work in
+  Vector3d dm, dn;
+  vector<pair<char, double>> dots;
+  dots.push_back(make_pair('u', abs(lambda.dot(Vector3d(1, 0, 0)))));
+  dots.push_back(make_pair('v', abs(lambda.dot(Vector3d(0, 1, 0)))));
+  dots.push_back(make_pair('w', abs(lambda.dot(Vector3d(0, 0, 1)))));
+  sort(dots.begin(), dots.end(),
+       [](const pair<char, double> p1, const pair<char, double> p2) { return p1.second > p2.second; });
+  char axis = dots[0].first;
+  if (axis == 'u')
+  {
+    dm << -lambda(1) / lambda(0), 1, 0;
+    dn << -lambda(2) / lambda(0), 0, 1;
+  }
+  else if (axis == 'v')
+  {
+    dm << 1, -lambda(0) / lambda(0), 0;
+    dn << 0, -lambda(2) / lambda(0), 1;
+  }
+  else
+  {
+    dm << 1, 0, -lambda(0) / lambda(0);
+    dn << 0, 1, -lambda(1) / lambda(0);
+  }
+  for (int idx = 0; idx < chassis_.n_; ++idx)
+  {
+    auto s_norm = chassis_.s_.col(idx).normalized();
+    if (lambda.isApprox(s_norm) || lambda.isApprox(-s_norm))
+    {
+      // Singularity
+    }
+  }
+  auto diff = chassis_.a_ - chassis_.l_;
+  auto delta = lambda.transpose() * diff;
+  auto omega = lambda.transpose() * chassis_.a_orth_;
+  auto gamma_top = omega * diff + delta * chassis_.a_orth_;
+  auto gamma_bottom = lambda.dot(delta * diff - omega * chassis_.a_orth_);
+  // TODO check singularity
+  VectorXd S_m = dm.dot(gamma_top);  // / gamma_bottom;
+  VectorXd S_n = dn.dot(gamma_top);  // / gamma_bottom;
+  /*
+        lmda_T = lmda.T
+        lmda_T_block = np.concatenate([lmda_T]*self.n)
+        diff = self.a - self.l_v
+        delta = lmda_T.dot(diff)
+        omega = lmda_T.dot(self.a_orth)
+        gamma_top = omega * diff + delta * self.a_orth
+        gamma_bottom = lmda_T.dot(delta * diff - omega * self.a_orth)
+        lmda_singular = (self.s / np.linalg.norm(self.s, axis=0)).T
+        is_singular = np.logical_or(
+            np.all(np.isclose(lmda_T_block, lmda_singular, atol=self.tolerance), axis=1),
+            np.all(np.isclose(lmda_T_block, -lmda_singular, atol=self.tolerance), axis=1)
+        )
+        S_m = dm.dot(gamma_top)
+        S_n = dn.dot(gamma_top)
+        for i,is_sing in enumerate(is_singular):
+            if is_sing:
+                gamma_bottom[0, i] = 1
+                S_m[0, i] = 0
+        S_m = (S_m / gamma_bottom).reshape(-1, 1)
+        S_n = (S_n / gamma_bottom).reshape(-1, 1)
+*/
+  Derivatives derivatives;
+  if (axis == 'u')
+  {
+    derivatives.u = {};
+    derivatives.v = S_m;
+    derivatives.w = S_n;
+  }
+  else if (axis == 'w')
+  {
+    derivatives.u = S_m;
+    derivatives.v = {};
+    derivatives.w = S_n;
+  }
+  else
+  {
+    derivatives.u = S_m;
+    derivatives.v = S_n;
+    derivatives.w = {};
+  }
+  return derivatives;
 }
 
 /**
