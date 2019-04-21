@@ -1,21 +1,16 @@
 #include <gtest/gtest.h>
 
-#include "libswervedrive/chassis.h"
 #include "libswervedrive/estimator.h"
+#include "chassis_fixture.h"
 
-TEST(EstimatorTest, ConvertsLambdaToQ) {
+
+class EstimatorTest : public ChassisTest {};
+
+TEST_F(EstimatorTest, ConvertsLambdaToQ) {
   using namespace Eigen;
   using namespace swervedrive;
-  VectorXd alpha(4);
-  alpha << 0, M_PI/2, M_PI, 3.0*M_PI/2.0;
-  VectorXd l = VectorXd::Constant(4, 1);
-  VectorXd b = VectorXd::Constant(4, 1);
-  VectorXd r = VectorXd::Constant(4, 1);
-  Bounds beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds;
 
-  Chassis c(alpha, l, b, r,
-      beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds);
-  Estimator e(c);
+  Estimator e(*chassis);
 
   Lambda lambda_spot_turn = Lambda(0, 0, 1);
 

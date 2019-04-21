@@ -1,27 +1,19 @@
 #include <gtest/gtest.h>
 
 #include "libswervedrive/chassis.h"
+#include "chassis_fixture.h"
 
-TEST(ChassisTest, InitialisesDerivedMatrices) {
-  using namespace Eigen;
-  using namespace swervedrive;
-  VectorXd alpha = VectorXd::Zero(4);
-  VectorXd l = VectorXd::Constant(4, 1);
-  VectorXd b = VectorXd::Constant(4, 1);
-  VectorXd r = VectorXd::Constant(4, 1);
-  Bounds beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds;
 
-  Chassis c(alpha, l, b, r,
-      beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds);
-  EXPECT_EQ(c.n, 4);
+TEST_F(ChassisTest, InitialisesDerivedMatrices) {
+  EXPECT_EQ(chassis->n, 4);
 
-  EXPECT_EQ(c.a(0,0), 1);
-  EXPECT_EQ(c.a(1,0), 0);
-  EXPECT_EQ(c.a(2,0), 0);
+  EXPECT_EQ(chassis->a(0,0), 1);
+  EXPECT_EQ(chassis->a(1,0), 0);
+  EXPECT_EQ(chassis->a(2,0), 0);
 
-  EXPECT_EQ(c.a_orth(0,0), 0);
-  EXPECT_EQ(c.a_orth(1,0), 1);
-  EXPECT_EQ(c.a_orth(2,0), 0);
+  EXPECT_EQ(chassis->a_orth(0,0), 0);
+  EXPECT_EQ(chassis->a_orth(1,0), 1);
+  EXPECT_EQ(chassis->a_orth(2,0), 0);
 
-  EXPECT_EQ(c.l_v(2,0), 1);
+  EXPECT_EQ(chassis->l_v(2,0), 1);
 }
