@@ -65,7 +65,7 @@ public:
    *
    * @return Lambda
    */
-  Lambda estimate_lambda(Eigen::VectorXd q);
+  Lambda estimate(Eigen::VectorXd q);
 
   /**
    * @brief
