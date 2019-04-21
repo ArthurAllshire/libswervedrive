@@ -23,3 +23,13 @@ TEST_F(EstimatorTest, FindStartingPoints)
     EXPECT_TRUE(sp.isApprox(Vector3d(0, 0, 1)));
   }
 }
+
+TEST_F(EstimatorTest, ComputeDerivatives)
+{
+  Estimator e(*chassis);
+  Derivatives d;
+
+  Lambda lambda;
+  
+  d = e.compute_derivatives(lambda);
+}
