@@ -12,7 +12,7 @@ protected:
     using namespace Eigen;
     using namespace swervedrive;
     VectorXd alpha(4);
-    alpha << 0, M_PI / 2, M_PI, 3 / 2 * M_PI;  // On sides of square robot
+    alpha << 0, M_PI / 2., M_PI, 3. / 2. * M_PI;  // On sides of square robot
     VectorXd l = VectorXd::Constant(4, 1);     // Side length of robot 2m
     VectorXd b = VectorXd::Constant(4, 0);     // No offset of wheels from axis
     VectorXd r = VectorXd::Constant(4, 0.5);   // D=1m -> theta rad rotation gives theta metres displacement
