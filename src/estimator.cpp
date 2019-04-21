@@ -2,7 +2,7 @@
 
 
 namespace swervedrive {
-Estimator::Estimator(Chassis chassis, Epsilon init, double eta_lambda,
+Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda,
   double eta_delta,
   double min_delta_line_search,
   double max_iter_lambda,

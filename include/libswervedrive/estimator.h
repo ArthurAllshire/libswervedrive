@@ -40,7 +40,7 @@ public:
    * @param singularity_tolerance how close a point must be to be considered to be
    *     'on a structural singularity'
    */
-  Estimator(Chassis chassis,
+  Estimator(const Chassis& chassis,
     Epsilon init = Eigen::VectorXd::Zero(3, 1),
     double eta_lambda=1e-4,
     double eta_delta=1e-2,
