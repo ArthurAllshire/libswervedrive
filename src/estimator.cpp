@@ -34,7 +34,7 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
   using namespace std;
   using namespace swervedrive;
   // Work out the best hemisphere to work in
-  Vector3d dm, dn;
+  RowVector3d dm, dn;
   vector<pair<char, double>> dots;
   dots.push_back(make_pair('u', abs(lambda.dot(Vector3d(1, 0, 0)))));
   dots.push_back(make_pair('v', abs(lambda.dot(Vector3d(0, 1, 0)))));
@@ -65,14 +65,25 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
       // Singularity
     }
   }
+  // we need to elementwise-multiply through broadcasting delta and omega
+  // (which are both 1xn row vectors) by three-row matrices, so create
+  Eigen::MatrixXd delta_block(3, chassis_.n_);
+  Eigen::MatrixXd omega_block(3, chassis_.n_);
+
   auto diff = chassis_.a_ - chassis_.l_;
   auto delta = lambda.transpose() * diff;
+  delta_block << delta, delta, delta;
   auto omega = lambda.transpose() * chassis_.a_orth_;
-  auto gamma_top = omega * diff + delta * chassis_.a_orth_;
-  auto gamma_bottom = lambda.dot(delta * diff - omega * chassis_.a_orth_);
+  omega_block << omega, omega, omega;
+
+  auto gamma_top = omega_block.cwiseProduct(diff) + delta_block.cwiseProduct(chassis_.a_orth_);
+  auto gamma_bottom =
+      lambda.transpose() * (delta_block.cwiseProduct(diff) - omega_block.cwiseProduct(chassis_.a_orth_));
+
   // TODO check singularity
-  VectorXd S_m = dm.dot(gamma_top);  // / gamma_bottom;
-  VectorXd S_n = dn.dot(gamma_top);  // / gamma_bottom;
+  VectorXd S_m = dm * gamma_top;  // / gamma_bottom;
+  VectorXd S_n = dn * gamma_top;  // / gamma_bottom;
+
   /*
         lmda_T = lmda.T
         lmda_T_block = np.concatenate([lmda_T]*self.n)
