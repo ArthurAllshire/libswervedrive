@@ -55,3 +55,13 @@ TEST_F(ChassisTest, IdentifiesSingularity)
   EXPECT_TRUE(chassis->singularity(lambda));
   EXPECT_EQ(chassis->singularity(lambda), 3);
 }
+
+TEST_F(ChassisTest, CalculatesDisplacement)
+{
+  VectorXd q1(4), q2(4), expected(4);
+  q1 << 0, -M_PI, 0, M_PI;
+  q2 << M_PI, M_PI, -M_PI, -M_PI;
+  expected << M_PI, 0, -M_PI, 0;
+
+  EXPECT_TRUE(expected.isApprox(chassis->displacement(q1, q2)));
+}

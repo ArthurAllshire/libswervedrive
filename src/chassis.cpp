@@ -70,6 +70,13 @@ VectorXd Chassis::betas(Lambda lambda)
   return betas;
 }
 
+VectorXd Chassis::displacement(VectorXd q_init, VectorXd q_final)
+{
+  auto diff = (q_final - q_init).array();
+  auto constrained = diff.unaryExpr([](double x) { return atan2(sin(x), cos(x)); });
+  return constrained;
+}
+
 /**
  * @brief
  * Identify the structural singularities that may have been produced when
