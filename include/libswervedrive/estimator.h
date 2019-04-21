@@ -66,6 +66,7 @@ public:
    * @return Lambda
    */
   Lambda estimate_lambda();
+
   /**
    * @brief
    *
@@ -73,15 +74,7 @@ public:
    * @return int
    */
   int handle_singularities(Lambda lambda);
-  /**
-   * @brief Calculate wheel positions from ICR.
-   *
-   * Computes the point in the joint space (space of all beta steering angle values) associated with a particular ICR.
-   *
-   * @param lambda the ICR to compute the point for.
-   * @return Eigen::VectorXd row vector expressing the point.
-   */
-  Eigen::VectorXd lambda_to_betas(Lambda lambda);
+
   /**
    * @brief
    *
@@ -89,6 +82,7 @@ public:
    * @return std::vector<Lambda>
    */
   std::vector<Lambda> select_starting_points(Eigen::VectorXd q);
+
   /**
    * @brief
    *
@@ -98,6 +92,7 @@ public:
    * @return Eigen::Vector3d
    */
   Eigen::Vector3d solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
+
   /**
    * @brief
    *
@@ -117,9 +112,6 @@ protected:
   double min_delta_line_search_ = 1e-2;
   double max_iter_lambda_ = 50;
   double singularity_tolerance_ = 1e-3;
-
-  //! Threshold to prevent division by (nearly) zero
-  const double numerical_zero_thresh_ = 1e-5;
 };
 }  // namespace swervedrive
 
