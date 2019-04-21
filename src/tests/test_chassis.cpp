@@ -3,6 +3,9 @@
 #include "libswervedrive/chassis.h"
 #include "chassis_fixture.h"
 
+using namespace Eigen;
+using namespace swervedrive;
+
 TEST_F(ChassisTest, InitialisesDerivedMatrices)
 {
   EXPECT_EQ(chassis->n_, 4);
@@ -20,9 +23,6 @@ TEST_F(ChassisTest, InitialisesDerivedMatrices)
 
 TEST_F(ChassisTest, ConvertsLambdaToBetas)
 {
-  using namespace Eigen;
-  using namespace swervedrive;
-
   Lambda lambda_spot_turn = Lambda(0, 0, 1);
 
   auto q = chassis->betas(lambda_spot_turn);
@@ -40,4 +40,18 @@ TEST_F(ChassisTest, ConvertsLambdaToBetas)
   q = chassis->betas(drive_along_x);
   expected << M_PI / 2.0, 0, M_PI / 2.0, 0;
   EXPECT_TRUE(q.isApprox(expected)) << "Expected: " << expected << "\nCalculated: " << q;
+}
+
+TEST_F(ChassisTest, IdentifiesSingularity)
+{
+  Lambda lambda = Vector3d(0, 0, 1).normalized();  // (x, y, 0)
+  EXPECT_FALSE(chassis->singularity(lambda));
+
+  lambda = Vector3d(1, 0, 1).normalized();  // (x, y, 0)
+  EXPECT_TRUE(chassis->singularity(lambda));
+  EXPECT_EQ(chassis->singularity(lambda), 0);
+
+  lambda = Vector3d(0, -1, 1).normalized();  // (x, y, 0)
+  EXPECT_TRUE(chassis->singularity(lambda));
+  EXPECT_EQ(chassis->singularity(lambda), 3);
 }

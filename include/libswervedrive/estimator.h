@@ -65,15 +65,7 @@ public:
    *
    * @return Lambda
    */
-  Lambda estimate_lambda();
-
-  /**
-   * @brief
-   *
-   * @param lambda
-   * @return int
-   */
-  int handle_singularities(Lambda lambda);
+  Lambda estimate_lambda(Eigen::VectorXd q);
 
   /**
    * @brief

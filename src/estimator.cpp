@@ -11,4 +11,5 @@ Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, do
   , min_delta_line_search_(min_delta_line_search)
   , max_iter_lambda_(max_iter_lambda)
   , singularity_tolerance_(singularity_tolerance){};
+
 }  // namespace swervedrive

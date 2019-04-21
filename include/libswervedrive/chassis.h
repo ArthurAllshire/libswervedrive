@@ -26,6 +26,7 @@ public:
   ~Chassis() = default;
 
   Eigen::VectorXd betas(Lambda lambda);
+  std::optional<int> singularity(Lambda lambda);
 
   //! Number of wheels
   int n_;
@@ -36,6 +37,8 @@ public:
   //! Orthogonal projection onto the H-sphere's equator of steering y-axis basis vector (each column represents one
   //! module)
   Eigen::MatrixXd a_orth_;
+  //! Vectors through steering axes
+  Eigen::MatrixXd s_;
   //! Distance from chassis centre to each module rotation axis, reported along the W axis (each column represents one
   //! module)
   Eigen::MatrixXd l_;
