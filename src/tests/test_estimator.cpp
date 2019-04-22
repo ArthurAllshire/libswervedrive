@@ -29,7 +29,23 @@ TEST_F(EstimatorTest, ComputeDerivatives)
   Estimator e(*chassis);
   Derivatives d;
 
-  Lambda lambda;
-  
+  Lambda lambda(0,0,1);
   d = e.compute_derivatives(lambda);
+  // w should be parameterised
+  EXPECT_FALSE(d.w);
+
+  lambda << 0,0,-1;
+  d = e.compute_derivatives(lambda);
+  // w should be parameterised
+  EXPECT_FALSE(d.w);
+
+  lambda << 0,1,0;
+  d = e.compute_derivatives(lambda);
+  // v should be parameterised
+  EXPECT_FALSE(d.v);
+
+  lambda << -1,0,0;
+  d = e.compute_derivatives(lambda);
+  // u should be parameterised
+  EXPECT_FALSE(d.u);
 }

@@ -113,7 +113,7 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
     derivatives.v = S_m;
     derivatives.w = S_n;
   }
-  else if (axis == 'w')
+  else if (axis == 'v')
   {
     derivatives.u = S_m;
     derivatives.v = {};
