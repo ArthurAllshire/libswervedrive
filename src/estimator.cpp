@@ -57,14 +57,7 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
     dm << 1, 0, -lambda(0) / lambda(0);
     dn << 0, 1, -lambda(1) / lambda(0);
   }
-  for (int idx = 0; idx < chassis_.n_; ++idx)
-  {
-    auto s_norm = chassis_.s_.col(idx).normalized();
-    if (lambda.isApprox(s_norm) || lambda.isApprox(-s_norm))
-    {
-      // Singularity
-    }
-  }
+
   // we need to elementwise-multiply through broadcasting delta and omega
   // (which are both 1xn row vectors) by three-row matrices, so create
   Eigen::MatrixXd delta_block(3, chassis_.n_);
@@ -76,13 +69,32 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
   auto omega = lambda.transpose() * chassis_.a_orth_;
   omega_block << omega, omega, omega;
 
-  auto gamma_top = omega_block.cwiseProduct(diff) + delta_block.cwiseProduct(chassis_.a_orth_);
-  auto gamma_bottom =
+
+  // 3 x n
+  MatrixXd gamma_top = (MatrixXd) omega_block.cwiseProduct(diff) + delta_block.cwiseProduct(chassis_.a_orth_);
+  // 1 x n
+  RowVectorXd gamma_bottom = (RowVectorXd)
       lambda.transpose() * (delta_block.cwiseProduct(diff) - omega_block.cwiseProduct(chassis_.a_orth_));
 
-  // TODO check singularity
-  VectorXd S_m = dm * gamma_top;  // / gamma_bottom;
-  VectorXd S_n = dn * gamma_top;  // / gamma_bottom;
+
+  RowVectorXd S_m = (dm * gamma_top);
+  RowVectorXd S_n = (dn * gamma_top);
+
+  for (int idx = 0; idx < chassis_.n_; ++idx)
+  {
+    auto s_norm = chassis_.s_.col(idx).normalized();
+    if (lambda.isApprox(s_norm) || lambda.isApprox(-s_norm))
+    {
+      S_m(idx) = 0;
+      // TODO: Do we need this line here:
+      S_n(idx) = 0;
+
+      gamma_bottom(idx) = 1;
+    }
+  }
+
+  S_m = S_m.cwiseQuotient(gamma_bottom);
+  S_n = S_n.cwiseQuotient(gamma_bottom);
 
   /*
         lmda_T = lmda.T
