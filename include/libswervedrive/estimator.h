@@ -20,6 +20,10 @@ struct Derivatives
   std::optional<Eigen::VectorXd> u, v, w;
 };
 
+struct Deltas
+{
+  std::optional<double> u, v, w;
+};
 /**
  * @brief An object for estimating the ICR and rotation about it of a swerve drive.
  *
@@ -40,7 +44,7 @@ public:
 
   Eigen::Vector3d solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
 
-  Lambda update_parameters(Lambda lambda, Eigen::Vector3d deltas, Eigen::VectorXd q);
+  Lambda update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q);
 
 protected:
   Chassis chassis_;

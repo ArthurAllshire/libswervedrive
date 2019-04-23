@@ -60,3 +60,18 @@ TEST_F(EstimatorTest, ComputeDerivatives)
   EXPECT_NEAR(v_vec(0), 0, 1e-8) << "v axis should be 0 for singularity";
   EXPECT_NEAR(w_vec(0), 0, 1e-8) << "w axis should be 0 for singularity";
 }
+
+TEST_F(EstimatorTest, UpdateParameters)
+{
+  Estimator e(*chassis);
+  Deltas deltas;
+  deltas.u = 0.5;
+  deltas.v = -0.5;
+  deltas.w = {};
+
+  Lambda lambda(0,0,1);
+  VectorXd q(4);
+  q << 0,0,0,0;
+
+  e.update_parameters(lambda, deltas, q);
+}

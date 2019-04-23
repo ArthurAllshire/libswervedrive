@@ -32,10 +32,10 @@ Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, do
   , singularity_tolerance_(singularity_tolerance){};
 
 /**
- * @brief 
- * 
- * @param q 
- * @return Lambda 
+ * @brief
+ *
+ * @param q
+ * @return Lambda
  */
 Lambda Estimator::estimate(Eigen::VectorXd q)
 {
@@ -197,27 +197,89 @@ std::vector<Lambda> Estimator::select_starting_points(Eigen::VectorXd q)
 }
 
 /**
- * @brief 
- * 
- * @param derivatives 
- * @param q 
- * @param lambda 
- * @return Eigen::Vector3d 
+ * @brief
+ *
+ * @param derivatives
+ * @param q
+ * @param lambda
+ * @return Eigen::Vector3d
  */
 Eigen::Vector3d Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda)
 {
 }
 
 /**
- * @brief 
- * 
- * @param lambda 
- * @param deltas 
- * @param q 
- * @return Lambda 
+ * @brief
+ *
+ * @param lambda
+ * @param deltas
+ * @param q
+ * @return Lambda
  */
-Lambda Estimator::update_parameters(Lambda lambda, Eigen::Vector3d deltas, Eigen::VectorXd q)
+Lambda Estimator::update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q)
 {
+  double m, n, delta_m, delta_n;
+  std::function<Lambda(double, double)> lambda_t;
+  if (!deltas.u) {
+    m = lambda(1);
+    n = lambda(2);
+    delta_m = *deltas.v;
+    delta_n = *deltas.w;
+    lambda_t = [](double m, double n) {
+      double residual = std::max(1 - m*m - n*n, 0.0);
+      return Eigen::Vector3d(std::pow(residual, 0.5), m, n).normalized();
+    };
+  } else if (!deltas.v) {
+    m = lambda(0);
+    n = lambda(2);
+    delta_m = *deltas.u;
+    delta_n = *deltas.w;
+    lambda_t = [](double m, double n) {
+      double residual = std::max(1 - m*m - n*n, 0.0);
+      return Eigen::Vector3d(m, std::pow(residual, 0.5), n).normalized();
+    };
+  } else {
+    m = lambda(0);
+    n = lambda(1);
+    delta_m = *deltas.u;
+    delta_n = *deltas.v;
+    lambda_t = [](double m, double n) {
+      double residual = std::max(1 - m*m - n*n, 0.0);
+      return Eigen::Vector3d(m, n, std::pow(residual, 0.5)).normalized();
+    };
+  }
+
+  double prev_m = m;
+  double prev_n = n;
+  double total_dist = chassis_.displacement(q, chassis_.betas(lambda)).norm();
+  while (1) {
+    double m_i = m + delta_m;
+    double n_i = n + delta_n;
+    // if adding delta_m and delta_m has produced out of bounds values,
+    // recursively multiply to ensure they remain within bounds
+    while (double factor = std::hypot(m_i, n_i) > 1) {
+      m_i /= factor;
+      n_i /= factor;
+    }
+    if (total_dist < chassis_.displacement(q, chassis_.betas(lambda_t(m_i, n_i))).norm()) {
+      // Diverging
+      // backtrack by reducing the step size
+      delta_m *= 0.5;
+      delta_n *= 0.5;
+
+      // set a minimum step size to avoid infinite recursion
+      if (std::hypot(delta_m, delta_n) < min_delta_line_search_) {
+        // Return the previous estimate
+        return lambda_t(prev_m, prev_n);  // TODO flag for divergence
+      } else {
+        prev_m = m_i;
+        prev_n = n_i;
+      }
+    } else {
+      return lambda_t(m_i, n_i);  // TODO divergence False
+    }
+
+  }
 }
 
 }  // namespace swervedrive
