@@ -54,7 +54,6 @@ TEST_F(EstimatorTest, ComputeDerivatives)
   d = e.compute_derivatives(lambda);
   // null axis should be u (tied dot product with w, but first in order),
   // so don't check it
-  // TODO: should we be checking the second vector?
   VectorXd v_vec = d.v.value();
   VectorXd w_vec = d.w.value();
   // check that the first wheel for v and w have zero derivative

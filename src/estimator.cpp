@@ -86,7 +86,6 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
     if (lambda.isApprox(s_norm) || lambda.isApprox(-s_norm))
     {
       S_m(idx) = 0;
-      // TODO: Do we need this line here:
       S_n(idx) = 0;
 
       gamma_bottom(idx) = 1;
