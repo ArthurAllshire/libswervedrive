@@ -42,7 +42,7 @@ public:
 
   std::vector<Lambda> select_starting_points(Eigen::VectorXd q);
 
-  Eigen::Vector3d solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
+  Deltas solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
 
   Lambda update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q);
 

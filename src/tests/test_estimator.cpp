@@ -75,3 +75,22 @@ TEST_F(EstimatorTest, UpdateParameters)
 
   e.update_parameters(lambda, deltas, q);
 }
+
+TEST_F(EstimatorTest, Solve)
+{
+  Estimator e(*chassis);
+  Derivatives derivatives;
+  auto u = VectorXd(4);
+  u << 1,2,3,4;
+  derivatives.u = u;
+  auto v = VectorXd(4);
+  v << -1,-2,-3,-4;
+  derivatives.v = v;
+  derivatives.w = {};
+
+  Lambda lambda(0,0,1);
+  VectorXd q(4);
+  q << 0,0,0,0;
+
+  e.solve(derivatives, q, lambda);
+}

@@ -204,8 +204,48 @@ std::vector<Lambda> Estimator::select_starting_points(Eigen::VectorXd q)
  * @param lambda
  * @return Eigen::Vector3d
  */
-Eigen::Vector3d Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda)
+Deltas Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda)
 {
+  using namespace Eigen;
+
+  auto p_zero = chassis_.betas(lambda);
+  auto diff = q - p_zero;
+  double a_u, a_c, a_v;
+  Vector2d b;
+  if (!derivatives.u) {
+    a_u = (*derivatives.v).dot(*derivatives.v);
+    a_c = (*derivatives.v).dot(*derivatives.w);
+    a_v = (*derivatives.w).dot(*derivatives.w);
+    b << diff.dot(*derivatives.v), diff.dot(*derivatives.w);
+  } else if (!derivatives.v) {
+    a_u = (*derivatives.u).dot(*derivatives.u);
+    a_c = (*derivatives.u).dot(*derivatives.w);
+    a_v = (*derivatives.w).dot(*derivatives.w);
+    b << diff.dot(*derivatives.u), diff.dot(*derivatives.w);
+  } else {
+    a_u = (*derivatives.u).dot(*derivatives.u);
+    a_c = (*derivatives.u).dot(*derivatives.v);
+    a_v = (*derivatives.v).dot(*derivatives.v);
+    b << diff.dot(*derivatives.u), diff.dot(*derivatives.v);
+  }
+  MatrixXd A(2,2);
+  A << a_u, a_c, a_c, a_v;
+  Vector2d x = A.colPivHouseholderQr().solve(b);
+  Deltas d;
+  if (!derivatives.u) {
+    d.u = {};
+    d.v = x(0);
+    d.w = x(1);
+  } else if (!derivatives.v) {
+    d.u = x(0);
+    d.v = {};
+    d.w = x(1);
+  } else {
+    d.u = x(0);
+    d.v = x(1);
+    d.w = {};
+  }
+  return d;
 }
 
 /**
