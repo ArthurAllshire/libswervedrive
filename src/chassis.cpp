@@ -98,4 +98,19 @@ std::optional<int> Chassis::singularity(Lambda lambda)
   return {};
 }
 
+/**
+ * @brief
+ * Calculate the distance (norm) between q and the point that lambda maps to in the joint space.
+ * Used to measure how good a 'fit' lambda is for the current steering angles.
+ *
+ * @param q a point in the joint space (VectorXd of beta angles)
+ * @param lambda the icr to map into the joint space and calculate the distance
+ * @return double the norm between q and the point lambda maps to in the joint space.
+ */
+double Chassis::lambda_joint_dist(Eigen::VectorXd q, Lambda lambda) {
+  VectorXd q_lambda = betas(lambda);
+  VectorXd distances = displacement(q, q_lambda);
+  return distances.norm();
+}
+
 }  // namespace swervedrive

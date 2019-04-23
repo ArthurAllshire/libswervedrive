@@ -27,6 +27,7 @@ public:
   ~Chassis() = default;
 
   Eigen::VectorXd betas(Lambda lambda);
+  double lambda_joint_dist(Eigen::VectorXd q, Lambda lambda);
   Eigen::VectorXd displacement(Eigen::VectorXd q1, Eigen::VectorXd q2);
   std::optional<int> singularity(Lambda lambda);
 

@@ -65,3 +65,26 @@ TEST_F(ChassisTest, CalculatesDisplacement)
 
   EXPECT_TRUE(expected.isApprox(chassis->displacement(q1, q2)));
 }
+
+TEST_F(ChassisTest, CalculatesLambdaJointDist)
+{
+  
+  Lambda lambda(0, 0, 1); // spot turn
+  VectorXd q_lambda = VectorXd::Zero(4);
+  VectorXd q_deltas(4);
+  q_deltas << 0.1, -0.1, -0.1, 0.1;
+
+  double dist_calc = chassis->lambda_joint_dist(q_lambda+q_deltas, lambda);
+  EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
+
+  lambda = Lambda(1, 0, 0); // straight forward
+  q_lambda << M_PI/2, 0, M_PI/2, 0;
+  dist_calc = chassis->lambda_joint_dist(q_lambda, lambda);
+  EXPECT_NEAR(dist_calc, 0, 1e-8);
+
+  // now test with error
+  dist_calc = chassis->lambda_joint_dist(q_lambda+q_deltas, lambda);
+  EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
+
+
+}
