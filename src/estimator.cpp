@@ -83,7 +83,7 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
   for (int idx = 0; idx < chassis_.n_; ++idx)
   {
     auto s_norm = chassis_.s_.col(idx).normalized();
-    if (lambda.isApprox(s_norm) || lambda.isApprox(-s_norm))
+    if (lambda.isApprox(s_norm, singularity_tolerance_) || lambda.isApprox(-s_norm, singularity_tolerance_))
     {
       S_m(idx) = 0;
       S_n(idx) = 0;
