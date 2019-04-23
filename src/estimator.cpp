@@ -4,6 +4,23 @@
 
 namespace swervedrive
 {
+/**
+ * @brief Construct a new Estimator object
+ *
+ * @param chassis a \sa{Chassis} object specifying the configuration of the chassis to estimate
+ * @param init Starting point [x, y, theta] of the chassis in the world frame. Defaults to zero.
+ * @param eta_lambda threshold when we assume the algorithm has converged to the correct
+ *     icr based on how much lambda has moved between sucessive iterations
+ * @param eta_delta threshold below which a starting point for iterative icr iteration is
+ *     selected based on the norm between the measured wheel positions and the wheel positions obtained from that
+ * starting point
+ * @param min_delta_line_search minimum size of the free parameters delta_m and delta_m
+ *     to avoid infinate recursion in the line search for the next iteration of the position of lambda
+ * @param max_iter_lambda maximum iterations allowed for the iterative icr estimation
+ *     algorithm to converge on one point
+ * @param singularity_tolerance how close a point must be to be considered to be
+ *     'on a structural singularity'
+ */
 Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, double eta_delta,
                      double min_delta_line_search, double max_iter_lambda, double singularity_tolerance)
   : chassis_(chassis)
@@ -14,19 +31,22 @@ Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, do
   , max_iter_lambda_(max_iter_lambda)
   , singularity_tolerance_(singularity_tolerance){};
 
+/**
+ * @brief 
+ * 
+ * @param q 
+ * @return Lambda 
+ */
 Lambda Estimator::estimate(Eigen::VectorXd q)
 {
 }
 
 /**
-  Compute the derivatives of the constraining surface at the current
-  estimate of the point.
-  :param lmda: position of the ICR estimate
-  :returns: np.ndarray with (S_u, S_v, S_w). S_u, S_v, S_w are the vectors
-  containing the derivatives of each steering angle in q with respect
-  u, v and w respectively.
-  One of them will be None because that axis is parameterised in terms
-  of the other two.
+ * @brief Compute derivatives of constraining surface at lambda.
+ *
+ * @param lambda Position of ICR.
+ * @return Derivatives (u, v, w), the vectors containing the derivatives of each steering angle
+ *     with respect to u, v, and w respectively.
  */
 Derivatives Estimator::compute_derivatives(Lambda lambda)
 {
@@ -176,9 +196,26 @@ std::vector<Lambda> Estimator::select_starting_points(Eigen::VectorXd q)
   return starting_points;
 }
 
+/**
+ * @brief 
+ * 
+ * @param derivatives 
+ * @param q 
+ * @param lambda 
+ * @return Eigen::Vector3d 
+ */
 Eigen::Vector3d Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda)
 {
 }
+
+/**
+ * @brief 
+ * 
+ * @param lambda 
+ * @param deltas 
+ * @param q 
+ * @return Lambda 
+ */
 Lambda Estimator::update_parameters(Lambda lambda, Eigen::Vector3d deltas, Eigen::VectorXd q)
 {
 }
