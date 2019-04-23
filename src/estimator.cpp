@@ -95,28 +95,6 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
   S_m = S_m.cwiseQuotient(gamma_bottom);
   S_n = S_n.cwiseQuotient(gamma_bottom);
 
-  /*
-        lmda_T = lmda.T
-        lmda_T_block = np.concatenate([lmda_T]*self.n)
-        diff = self.a - self.l_v
-        delta = lmda_T.dot(diff)
-        omega = lmda_T.dot(self.a_orth)
-        gamma_top = omega * diff + delta * self.a_orth
-        gamma_bottom = lmda_T.dot(delta * diff - omega * self.a_orth)
-        lmda_singular = (self.s / np.linalg.norm(self.s, axis=0)).T
-        is_singular = np.logical_or(
-            np.all(np.isclose(lmda_T_block, lmda_singular, atol=self.tolerance), axis=1),
-            np.all(np.isclose(lmda_T_block, -lmda_singular, atol=self.tolerance), axis=1)
-        )
-        S_m = dm.dot(gamma_top)
-        S_n = dn.dot(gamma_top)
-        for i,is_sing in enumerate(is_singular):
-            if is_sing:
-                gamma_bottom[0, i] = 1
-                S_m[0, i] = 0
-        S_m = (S_m / gamma_bottom).reshape(-1, 1)
-        S_n = (S_n / gamma_bottom).reshape(-1, 1)
-*/
   Derivatives derivatives;
   if (axis == 'u')
   {
