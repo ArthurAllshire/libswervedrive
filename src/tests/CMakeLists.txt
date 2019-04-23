@@ -40,6 +40,13 @@ file(GLOB TESTSRCS "test*.cpp")
 add_executable(run_tests
   ${TESTSRCS}
 )
+if (Eigen3_VERSION VERSION_EQUAL "3.3" OR Eigen3_VERSION VERSION_GREATER "3.3")
+  # If we have a version of Eigen before 3.3 then the next line is not needed
+  # Travis runs Ubuntu 16.04 which has Eigen3.3~beta1-2 which fails if the next line
+  # is included
+else()
+  include_directories ( ${EIGEN3_INCLUDE_DIRS} )
+endif()
 
 target_link_libraries(run_tests PRIVATE --coverage
   gtest
