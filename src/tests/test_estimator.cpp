@@ -73,7 +73,8 @@ TEST_F(EstimatorTest, UpdateParameters)
   VectorXd q(4);
   q << 0,0,0,0;
 
-  e.update_parameters(lambda, deltas, q);
+  bool diverged;
+  e.update_parameters(lambda, deltas, q, diverged);
 }
 
 TEST_F(EstimatorTest, Solve)

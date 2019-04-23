@@ -254,9 +254,10 @@ Deltas Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambd
  * @param lambda
  * @param deltas
  * @param q
+ * @param diverged
  * @return Lambda
  */
-Lambda Estimator::update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q)
+Lambda Estimator::update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q, bool& diverged)
 {
   double m, n, delta_m, delta_n;
   std::function<Lambda(double, double)> lambda_t;
@@ -310,13 +311,15 @@ Lambda Estimator::update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorX
       // set a minimum step size to avoid infinite recursion
       if (std::hypot(delta_m, delta_n) < min_delta_line_search_) {
         // Return the previous estimate
-        return lambda_t(prev_m, prev_n);  // TODO flag for divergence
+        diverged = true;
+        return lambda_t(prev_m, prev_n);
       } else {
         prev_m = m_i;
         prev_n = n_i;
       }
     } else {
-      return lambda_t(m_i, n_i);  // TODO divergence False
+      diverged = false;
+      return lambda_t(m_i, n_i);
     }
 
   }

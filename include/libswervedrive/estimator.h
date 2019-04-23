@@ -44,7 +44,7 @@ public:
 
   Deltas solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
 
-  Lambda update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q);
+  Lambda update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q, bool& diverged);
 
 protected:
   Chassis chassis_;
