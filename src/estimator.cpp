@@ -39,6 +39,61 @@ Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, do
  */
 Lambda Estimator::estimate(Eigen::VectorXd q)
 {
+  using namespace Eigen;
+  using namespace std;
+  using namespace swervedrive;
+
+  std::vector<Lambda> starting_points = select_starting_points(q);
+
+  bool found = false;
+  optional<Lambda> closest_lambda = {};
+  optional<double> closest_dist = {};
+  for (auto lambda_start : starting_points) {
+
+    Lambda lambda = lambda_start;
+
+    // populate closest_lambda if not already
+    if (!closest_lambda.has_value()) {
+      closest_lambda = lambda_start;
+      closest_dist = chassis_.lambda_joint_dist(q, lambda_start);
+    } 
+
+    if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_) {
+      found = true;
+    } else
+    {
+      optional<int> last_singularity = {};
+
+      for (int i=0; i < max_iter_lambda_; ++i) {
+        Derivatives d = compute_derivatives(lambda);
+        // TODO: determine if we want to remove this - shouldn't compute_derivatives handle?
+        if (last_singularity.has_value()) {
+          // if we h
+          int val = last_singularity.value();
+          if (d.u.has_value()) {
+            d.u.value()(val) = 0;
+          }
+          if (d.v.has_value()) {
+            d.v.value()(val) = 0;
+          }
+          if (d.w.has_value()) {
+            d.w.value()(val) = 0;
+          }
+        }
+        Deltas deltas = solve(d, q, lambda);
+        bool worse;
+        Lambda lambda_t = update_parameters(lambda, deltas, q, worse);  
+        optional<int> singularity = chassis_.singularity(lambda_t);
+
+        if (last_singularity.has_value() && singularity.has_value()) {
+
+        }
+
+      }
+    }
+    
+
+  }
 }
 
 /**

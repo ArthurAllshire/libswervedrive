@@ -95,3 +95,16 @@ TEST_F(EstimatorTest, Solve)
 
   e.solve(derivatives, q, lambda);
 }
+
+TEST_F(EstimatorTest, Estimate)
+{
+  Estimator e(*chassis);
+  
+  // test spot turn
+  Lambda lambda(0, 0, 1);
+  auto q = VectorXd(4);
+  q << 0, 0, 0, 0;
+
+  Lambda lambda_estimate = e.estimate(q);
+  EXPECT_TRUE(lambda_estimate.isApprox(lambda));
+}
