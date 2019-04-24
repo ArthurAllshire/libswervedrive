@@ -50,7 +50,7 @@ Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd b, VectorXd r, Bounds beta
  * @param lambda the ICR to compute the point for.
  * @return Eigen::VectorXd row vector of beta values.
  */
-VectorXd Chassis::betas(Lambda lambda)
+VectorXd Chassis::betas(const Lambda& lambda) const
 {
   auto y = (a_orth_.transpose() * lambda);
   auto x = ((a_ - l_).transpose() * lambda);
@@ -70,7 +70,7 @@ VectorXd Chassis::betas(Lambda lambda)
   return betas;
 }
 
-VectorXd Chassis::displacement(VectorXd q_init, VectorXd q_final)
+VectorXd Chassis::displacement(const VectorXd& q_init, const VectorXd& q_final) const
 {
   auto diff = (q_final - q_init).array();
   auto constrained = diff.unaryExpr([](double x) {
@@ -93,7 +93,7 @@ VectorXd Chassis::displacement(VectorXd q_init, VectorXd q_final)
  * @returns std::optional<int> if the ICR is on a structural singularity, and the wheel
  * number which the singularity is on if there is one
  */
-std::optional<int> Chassis::singularity(Lambda lambda)
+std::optional<int> Chassis::singularity(const Lambda& lambda) const
 {
   for (int idx = 0; idx < n_; ++idx)
   {
@@ -115,7 +115,8 @@ std::optional<int> Chassis::singularity(Lambda lambda)
  * @param lambda the icr to map into the joint space and calculate the distance
  * @return double the norm between q and the point lambda maps to in the joint space.
  */
-double Chassis::lambda_joint_dist(Eigen::VectorXd q, Lambda lambda) {
+double Chassis::lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const
+{
   VectorXd q_lambda = betas(lambda);
   VectorXd distances = displacement(q, q_lambda);
   return distances.norm();

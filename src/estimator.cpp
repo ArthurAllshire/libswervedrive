@@ -37,7 +37,7 @@ Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, do
  * @param q
  * @return Lambda
  */
-Lambda Estimator::estimate(Eigen::VectorXd q)
+Lambda Estimator::estimate(const Eigen::VectorXd& q) const
 {
   using namespace Eigen;
   using namespace std;
@@ -89,7 +89,7 @@ Lambda Estimator::estimate(Eigen::VectorXd q)
  * @return Derivatives (u, v, w), the vectors containing the derivatives of each steering angle
  *     with respect to u, v, and w respectively.
  */
-Derivatives Estimator::compute_derivatives(Lambda lambda)
+Derivatives Estimator::compute_derivatives(const Lambda& lambda) const
 {
   using namespace Eigen;
   using namespace std;
@@ -185,7 +185,7 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
   @returns List of the top three starting points ordered according to
   their distance to the input length.
  */
-std::vector<Lambda> Estimator::select_starting_points(Eigen::VectorXd q)
+std::vector<Lambda> Estimator::select_starting_points(const Eigen::VectorXd& q) const
 {
   using namespace Eigen;
   using namespace std;
@@ -241,7 +241,7 @@ std::vector<Lambda> Estimator::select_starting_points(Eigen::VectorXd q)
  * @param lambda
  * @return Eigen::Vector3d
  */
-Deltas Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda)
+Deltas Estimator::solve(const Derivatives& derivatives, const Eigen::VectorXd& q, const Lambda& lambda) const
 {
   using namespace Eigen;
 
@@ -294,7 +294,7 @@ Deltas Estimator::solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambd
  * @param diverged
  * @return Lambda
  */
-Lambda Estimator::update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q, bool& diverged)
+Lambda Estimator::update_parameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q, bool& diverged) const
 {
   double m, n, delta_m, delta_n;
   std::function<Lambda(double, double)> lambda_t;

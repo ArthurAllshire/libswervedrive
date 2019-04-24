@@ -26,10 +26,10 @@ public:
           Bounds beta_dot_bounds, Bounds beta_2dot_bounds, Bounds phi_dot_bounds, Bounds phi_2dot_bounds);
   ~Chassis() = default;
 
-  Eigen::VectorXd betas(Lambda lambda);
-  double lambda_joint_dist(Eigen::VectorXd q, Lambda lambda);
-  Eigen::VectorXd displacement(Eigen::VectorXd q1, Eigen::VectorXd q2);
-  std::optional<int> singularity(Lambda lambda);
+  Eigen::VectorXd betas(const Lambda& lambda) const;
+  double lambda_joint_dist(const Eigen::VectorXd& q, const Lambda& lambda) const;
+  Eigen::VectorXd displacement(const Eigen::VectorXd& q1, const Eigen::VectorXd& q2) const;
+  std::optional<int> singularity(const Lambda& lambda) const;
 
   //! Number of wheels
   int n_;

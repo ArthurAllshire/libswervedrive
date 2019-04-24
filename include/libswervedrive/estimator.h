@@ -36,15 +36,15 @@ public:
             double singularity_tolerance = 1e-3);
   ~Estimator() = default;
 
-  Derivatives compute_derivatives(Lambda lambda);
+  Derivatives compute_derivatives(const Lambda& lambda) const;
 
-  Lambda estimate(Eigen::VectorXd q);
+  Lambda estimate(const Eigen::VectorXd& q) const;
 
-  std::vector<Lambda> select_starting_points(Eigen::VectorXd q);
+  std::vector<Lambda> select_starting_points(const Eigen::VectorXd& q) const;
 
-  Deltas solve(Derivatives derivatives, Eigen::VectorXd q, Lambda lambda);
+  Deltas solve(const Derivatives& derivatives, const Eigen::VectorXd& q, const Lambda& lambda) const;
 
-  Lambda update_parameters(Lambda lambda, Deltas deltas, Eigen::VectorXd q, bool& diverged);
+  Lambda update_parameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q, bool& diverged) const;
 
 protected:
   Chassis chassis_;
