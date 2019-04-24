@@ -333,7 +333,8 @@ Lambda Estimator::update_parameters(const Lambda& lambda, const Deltas& deltas, 
     double n_i = n + delta_n;
     // if adding delta_m and delta_m has produced out of bounds values,
     // recursively multiply to ensure they remain within bounds
-    while (double factor = std::hypot(m_i, n_i) > 1) {
+    double factor;
+    while ((factor = std::hypot(m_i, n_i)) > 1) {
       m_i /= factor;
       n_i /= factor;
     }
