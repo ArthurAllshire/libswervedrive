@@ -19,7 +19,7 @@ jobs:
           command: 'apt-get update && apt-get install -y git'
       - run:
           name: Install Python3
-          command: 'apt-get update && apt-get install -y python3 python3-distutils'
+          command: 'apt-get update && apt-get install -y python3 python3-distutils python3-dev'
       - checkout
       - run:
           name: "Pull Submodules"
