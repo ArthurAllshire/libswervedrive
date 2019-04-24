@@ -45,12 +45,12 @@ Lambda Estimator::estimate(Eigen::VectorXd q)
 
   std::vector<Lambda> starting_points = select_starting_points(q);
 
-  bool found = false;
   optional<Lambda> closest_lambda = {};
   optional<double> closest_dist = {};
   for (auto lambda_start : starting_points) {
 
     Lambda lambda = lambda_start;
+    double total_displacement = chassis_.lambda_joint_dist(q, lambda_start);
 
     // populate closest_lambda if not already
     if (!closest_lambda) {
@@ -59,41 +59,27 @@ Lambda Estimator::estimate(Eigen::VectorXd q)
     }
 
     if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_) {
-      found = true;
-    } else
-    {
-      optional<int> last_singularity = {};
-
+      return lambda;
+    } else {
       for (int i=0; i < max_iter_lambda_; ++i) {
         Derivatives d = compute_derivatives(lambda);
-        // TODO: determine if we want to remove this - shouldn't compute_derivatives handle?
-        if (last_singularity) {
-          // if we h
-          int val = *last_singularity;
-          if (d.u) {
-            (*d.u)(val) = 0;
-          }
-          if (d.v) {
-            (*d.v)(val) = 0;
-          }
-          if (d.w) {
-            (*d.w)(val) = 0;
-          }
-        }
         Deltas deltas = solve(d, q, lambda);
-        bool worse;
-        Lambda lambda_t = update_parameters(lambda, deltas, q, worse);
+        bool diverging;
+        Lambda lambda_t = update_parameters(lambda, deltas, q, diverging);
         optional<int> singularity = chassis_.singularity(lambda_t);
 
-        if (last_singularity && singularity) {
-
+        // TODO use the singularity calc
+        if (chassis_.lambda_joint_dist(q, lambda_t) > total_displacement) {
+          break;
+        } else if ((lambda - lambda_t).norm() < eta_lambda_) {
+          return lambda_t;
         }
-
+        lambda = lambda_t;
       }
     }
-
-
   }
+  // If we exhausted all the starting points and couldn't return a value, return the closest
+  // TODO closest lambda
 }
 
 /**
@@ -155,16 +141,12 @@ Derivatives Estimator::compute_derivatives(Lambda lambda)
   RowVectorXd S_m = (dm * gamma_top);
   RowVectorXd S_n = (dn * gamma_top);
 
-  for (int idx = 0; idx < chassis_.n_; ++idx)
-  {
-    auto s_norm = chassis_.s_.col(idx).normalized();
-    if (lambda.isApprox(s_norm, singularity_tolerance_) || lambda.isApprox(-s_norm, singularity_tolerance_))
-    {
-      S_m(idx) = 0;
-      S_n(idx) = 0;
+  auto singularity = chassis_.singularity(lambda);
+  if (singularity) {
+    S_m(*singularity) = 0;
+    S_n(*singularity) = 0;
 
-      gamma_bottom(idx) = 1;
-    }
+    gamma_bottom(*singularity) = 1;
   }
 
   S_m = S_m.cwiseQuotient(gamma_bottom);
