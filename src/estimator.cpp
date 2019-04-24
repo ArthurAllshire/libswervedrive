@@ -59,8 +59,8 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
         Deltas deltas = solve(d, q, lambda);
         bool diverging;
         Lambda lambda_t = update_parameters(lambda, deltas, q, diverging);
-        optional<int> singularity = chassis_.singularity(lambda_t);
 
+        //optional<int> singularity = chassis_.singularity(lambda_t);
         // TODO use the singularity calc
 
         double proposed_distance = chassis_.lambda_joint_dist(q, lambda);
