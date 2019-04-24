@@ -61,14 +61,20 @@ TEST_F(ChassisTest, CalculatesDisplacement)
   VectorXd q1(4), q2(4), expected(4);
   q1 << 0, -M_PI, 0, M_PI;
   q2 << M_PI, M_PI, -M_PI, -M_PI;
-  expected << M_PI, 0, -M_PI, 0;
+  expected << 0, 0, 0, 0;
+  auto disp = chassis->displacement(q1, q2);
+  EXPECT_TRUE((expected-disp).isMuchSmallerThan(1.-4)) << expected << "\n" << disp;
 
-  EXPECT_TRUE(expected.isApprox(chassis->displacement(q1, q2)));
+  q1 << 0, -M_PI, 0, M_PI;
+  q2 << M_PI*3./2., M_PI*3./2., -M_PI*3./2., -M_PI*3./2.;
+  expected << M_PI/2., M_PI/2., -M_PI/2., -M_PI/2.;
+  disp = chassis->displacement(q1, q2);
+  EXPECT_TRUE(expected.isApprox(disp)) << expected << "\n" << disp;
 }
 
 TEST_F(ChassisTest, CalculatesLambdaJointDist)
 {
-  
+
   Lambda lambda(0, 0, 1); // spot turn
   VectorXd q_lambda = VectorXd::Zero(4);
   VectorXd q_deltas(4);
@@ -77,7 +83,7 @@ TEST_F(ChassisTest, CalculatesLambdaJointDist)
   double dist_calc = chassis->lambda_joint_dist(q_lambda+q_deltas, lambda);
   EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
 
-  lambda = Lambda(1, 0, 0); // straight forward
+  lambda = Lambda(0, 1, 0); // straight forward
   q_lambda << M_PI/2, 0, M_PI/2, 0;
   dist_calc = chassis->lambda_joint_dist(q_lambda, lambda);
   EXPECT_NEAR(dist_calc, 0, 1e-8);

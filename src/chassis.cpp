@@ -73,7 +73,15 @@ VectorXd Chassis::betas(Lambda lambda)
 VectorXd Chassis::displacement(VectorXd q_init, VectorXd q_final)
 {
   auto diff = (q_final - q_init).array();
-  auto constrained = diff.unaryExpr([](double x) { return atan2(sin(x), cos(x)); });
+  auto constrained = diff.unaryExpr([](double x) {
+      double angle = atan2(sin(x), cos(x));
+      double mirror = atan2(sin(x + M_PI), cos(x + M_PI));
+      if (abs(angle) < abs(mirror)) {
+        return angle;
+      } else {
+        return mirror;
+      }
+    });
   return constrained;
 }
 
