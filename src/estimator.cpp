@@ -53,10 +53,10 @@ Lambda Estimator::estimate(Eigen::VectorXd q)
     Lambda lambda = lambda_start;
 
     // populate closest_lambda if not already
-    if (!closest_lambda.has_value()) {
+    if (!closest_lambda) {
       closest_lambda = lambda_start;
       closest_dist = chassis_.lambda_joint_dist(q, lambda_start);
-    } 
+    }
 
     if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_) {
       found = true;
@@ -67,31 +67,31 @@ Lambda Estimator::estimate(Eigen::VectorXd q)
       for (int i=0; i < max_iter_lambda_; ++i) {
         Derivatives d = compute_derivatives(lambda);
         // TODO: determine if we want to remove this - shouldn't compute_derivatives handle?
-        if (last_singularity.has_value()) {
+        if (last_singularity) {
           // if we h
-          int val = last_singularity.value();
-          if (d.u.has_value()) {
-            d.u.value()(val) = 0;
+          int val = *last_singularity;
+          if (d.u) {
+            (*d.u)(val) = 0;
           }
-          if (d.v.has_value()) {
-            d.v.value()(val) = 0;
+          if (d.v) {
+            (*d.v)(val) = 0;
           }
-          if (d.w.has_value()) {
-            d.w.value()(val) = 0;
+          if (d.w) {
+            (*d.w)(val) = 0;
           }
         }
         Deltas deltas = solve(d, q, lambda);
         bool worse;
-        Lambda lambda_t = update_parameters(lambda, deltas, q, worse);  
+        Lambda lambda_t = update_parameters(lambda, deltas, q, worse);
         optional<int> singularity = chassis_.singularity(lambda_t);
 
-        if (last_singularity.has_value() && singularity.has_value()) {
+        if (last_singularity && singularity) {
 
         }
 
       }
     }
-    
+
 
   }
 }
