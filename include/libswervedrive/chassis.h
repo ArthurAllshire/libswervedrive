@@ -10,8 +10,6 @@ namespace swervedrive
 {
 //! Velocity bounds
 using Bounds = std::vector<Eigen::Vector2d>;
-//! Position of the robot in terms of [x, y, theta]
-using Epsilon = Eigen::Vector3d;
 //! ICR of the robot in terms of the spherical parametrisation (u, v, w)
 using Lambda = Eigen::Vector3d;
 

@@ -10,6 +10,10 @@
 
 namespace swervedrive
 {
+
+//! Position of the robot in terms of [x, y, theta]
+using Epsilon = Eigen::Vector3d;
+
 /**
  * @brief Represents the derivatives of each steering angle with respect to
  *        2/3 of u, v and w (the other has no value).
