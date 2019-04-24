@@ -44,19 +44,12 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
   using namespace swervedrive;
 
   std::vector<Lambda> starting_points = select_starting_points(q);
+  Lambda closest_lambda = starting_points[0];
+  double closest_dist = 1e99;
 
-  optional<Lambda> closest_lambda = {};
-  optional<double> closest_dist = {};
   for (auto lambda_start : starting_points) {
-
     Lambda lambda = lambda_start;
     double total_displacement = chassis_.lambda_joint_dist(q, lambda_start);
-
-    // populate closest_lambda if not already
-    if (!closest_lambda) {
-      closest_lambda = lambda_start;
-      closest_dist = chassis_.lambda_joint_dist(q, lambda_start);
-    }
 
     if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_) {
       return lambda;
@@ -69,17 +62,22 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
         optional<int> singularity = chassis_.singularity(lambda_t);
 
         // TODO use the singularity calc
-        if (chassis_.lambda_joint_dist(q, lambda_t) > total_displacement) {
+
+        double proposed_distance = chassis_.lambda_joint_dist(q, lambda);
+        if (proposed_distance > total_displacement) {
           break;
         } else if ((lambda - lambda_t).norm() < eta_lambda_) {
           return lambda_t;
+        } else if (proposed_distance < closest_dist) {
+          closest_dist = proposed_distance;
+          closest_lambda = lambda_t;
         }
         lambda = lambda_t;
       }
     }
   }
   // If we exhausted all the starting points and couldn't return a value, return the closest
-  // TODO closest lambda
+  return closest_lambda;
 }
 
 /**
