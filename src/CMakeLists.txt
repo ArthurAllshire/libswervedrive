@@ -10,6 +10,8 @@ add_library (swervedrive
   chassis.cpp
   controller.cpp
   estimator.cpp
+  kinematic_model.cpp
+  time_scaler.cpp
 )
 
 target_link_libraries (swervedrive
