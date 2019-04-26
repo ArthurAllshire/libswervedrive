@@ -24,6 +24,7 @@ Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd b, VectorXd r, Bounds beta
   , l_vector_(l)
   , b_(b)
   , r_(r)
+  , beta_bounds_(beta_bounds)
   , beta_dot_bounds_(beta_dot_bounds)
   , beta_2dot_bounds_(beta_2dot_bounds)
   , phi_dot_bounds_(phi_dot_bounds)
