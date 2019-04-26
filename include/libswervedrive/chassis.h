@@ -12,6 +12,20 @@ namespace swervedrive
 using Bounds = std::vector<Eigen::Vector2d>;
 //! ICR of the robot in terms of the spherical parametrisation (u, v, w)
 using Lambda = Eigen::Vector3d;
+using Nu = Eigen::Vector4d;
+
+//! Position of the robot in terms of [x, y, theta]
+using Epsilon = Eigen::Vector3d;
+
+struct ModuleMotion
+{
+  double beta_dot;
+  double beta_2dot;
+  double phi_dot;
+  double phi_2dot;
+};
+
+using Motion = std::vector<ModuleMotion>;
 
 /**
  * @brief Represents a chassis configurtaion

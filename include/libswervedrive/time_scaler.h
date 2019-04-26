@@ -20,15 +20,6 @@ struct ScalingParameters
   double s_2dot;
 };
 
-struct ModuleMotion
-{
-  double beta_dot;
-  double beta_2dot;
-  double phi_2dot;
-};
-
-using Motion = std::vector<ModuleMotion>;
-
 class TimeScaler
 {
 public:
