@@ -45,6 +45,8 @@ public:
   std::optional<int> singularity(const Lambda& lambda) const;
   std::pair<Eigen::MatrixXd, Eigen::MatrixXd> s_perp(const Lambda& lambda);
 
+  Lambda cartesian_to_lambda(double x, double y);
+
   //! Number of wheels
   int n_;
 

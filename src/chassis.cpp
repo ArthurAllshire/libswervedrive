@@ -149,4 +149,10 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::s_perp(const Lambda& lambda
   return std::pair(s1_lmda, s2_lmda);
 }
 
+Lambda Chassis::cartesian_to_lambda(double x, double y) {
+  VectorXd plane(3);
+  plane << x, y, 1;
+  return plane.norm() * plane;
+}
+
 }  // namespace swervedrive
