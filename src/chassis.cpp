@@ -123,4 +123,30 @@ double Chassis::lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const
   return distances.norm();
 }
 
+/**
+ * @brief Calculates the s_perp (1 and 2) value from the pappers.
+ * 
+ * @param lambda Lambda to calculate s_perp 1 and 2 based on.
+ * @return std::pair<Eigen::MatrixXd, Eigen::MatrixXd> a pair of (s1, s2)
+ */
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::s_perp(const Lambda& lambda) {
+  RowVectorXd s = a_orth_.transpose() * lambda;
+  RowVectorXd c = (a_ - l_).transpose() * lambda;
+  MatrixXd s_block(3, n_);
+  s_block << s, s, s;
+  MatrixXd c_block(3, n_);
+  c_block << c, c, c;
+
+  MatrixXd s1_lmda = (
+    (a_ - l_).cwiseProduct(s_block)
+    - a_orth_.cwiseProduct(c_block)
+  );
+
+  MatrixXd s2_lmda = (
+    (a_ - l_).cwiseProduct(c_block)
+    - a_orth_.cwiseProduct(s_block)
+  );
+  return std::pair(s1_lmda, s2_lmda);
+}
+
 }  // namespace swervedrive

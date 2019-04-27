@@ -94,3 +94,22 @@ TEST_F(ChassisTest, CalculatesLambdaJointDist)
 
 
 }
+
+TEST_F(ChassisTest, CalculatesSPerp) {
+  Lambda lambda;
+  lambda << 0, 0, 1;
+
+  std::pair<MatrixXd, MatrixXd> s_perp = chassis->s_perp(lambda);
+
+  MatrixXd expected_s1(3, chassis->n_);
+  MatrixXd expected_s2(3, chassis->n_);
+  expected_s1 <<  0, -1,  0,  1,
+                  1,  0, -1,  0,
+                  0,  0,  0,  0;
+  expected_s2 << -1,  0,  1,  0,
+                  0, -1,  0,  1,
+                  1,  1,  1,  1;
+  EXPECT_TRUE(s_perp.first.isApprox(expected_s1));
+  EXPECT_TRUE(s_perp.second.isApprox(expected_s2));
+
+}

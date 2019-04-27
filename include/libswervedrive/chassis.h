@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <optional>
+#include <utility>
 
 namespace swervedrive
 {
@@ -42,6 +43,7 @@ public:
   double lambda_joint_dist(const Eigen::VectorXd& q, const Lambda& lambda) const;
   Eigen::VectorXd displacement(const Eigen::VectorXd& q1, const Eigen::VectorXd& q2) const;
   std::optional<int> singularity(const Lambda& lambda) const;
+  std::pair<Eigen::MatrixXd, Eigen::MatrixXd> s_perp(const Lambda& lambda);
 
   //! Number of wheels
   int n_;
