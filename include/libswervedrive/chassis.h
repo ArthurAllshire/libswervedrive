@@ -15,7 +15,7 @@ using Lambda = Eigen::Vector3d;
 using Nu = Eigen::Vector4d;
 
 //! Position of the robot in terms of [x, y, theta]
-using Epsilon = Eigen::Vector3d;
+using Xi = Eigen::Vector3d;
 
 struct ModuleMotion
 {

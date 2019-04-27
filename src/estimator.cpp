@@ -21,10 +21,10 @@ namespace swervedrive
  * @param singularity_tolerance how close a point must be to be considered to be
  *     'on a structural singularity'
  */
-Estimator::Estimator(const Chassis& chassis, Epsilon init, double eta_lambda, double eta_delta,
+Estimator::Estimator(const Chassis& chassis, Xi init, double eta_lambda, double eta_delta,
                      double min_delta_line_search, double max_iter_lambda, double singularity_tolerance)
   : chassis_(chassis)
-  , epsilon_(init)
+  , xi_(init)
   , eta_lambda_(eta_lambda)
   , eta_delta_(eta_delta)
   , min_delta_line_search_(min_delta_line_search)

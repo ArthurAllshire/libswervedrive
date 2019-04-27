@@ -43,7 +43,7 @@ PYBIND11_MODULE(pyswervedrive, m) {
 
   py::class_<Estimator>(m, "Estimator")
       .def(py::init<const Chassis &,
-                    Epsilon,
+                    Xi,
                     double,
                     double,
                     double,
@@ -51,7 +51,7 @@ PYBIND11_MODULE(pyswervedrive, m) {
                     double
       >(),
                     py::arg("chassis"),
-                    py::arg("epsilon")=Eigen::VectorXd::Zero(3, 1),
+                    py::arg("Xi")=Eigen::VectorXd::Zero(3, 1),
                     py::arg("eta_lambda")=1e-4,
                     py::arg("eta_delta")=1e-2,
                     py::arg("min_delta_line_search")=1e-2,
