@@ -6,7 +6,7 @@
 namespace swervedrive {
 class KinematicModel {
 public:
-  KinematicModel (const Chassis&);
+  KinematicModel (const Chassis&, double k_beta);
   ~KinematicModel () = default;
 
   std::pair<Nu, Lambda> compute_chassis_motion(Lambda lambda_desired, double mu_desired,
@@ -20,6 +20,8 @@ public:
   double estimate_mu(Lambda, Eigen::VectorXd phi_dot);
 private:
   Chassis chassis_;
+
+  double k_beta_;
 };
 
 }
