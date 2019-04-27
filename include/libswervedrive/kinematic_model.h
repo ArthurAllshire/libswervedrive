@@ -16,12 +16,13 @@ public:
   Motion compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot,
       double mu, double mu_dot, Eigen::VectorXd betas);
   Motion reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated);
-  Xi compute_odometry(Lambda, double mu, double dt);
-  double estimate_mu(Lambda, Eigen::VectorXd phi_dot);
+  Xi compute_odometry(Lambda lambda, double mu, double dt);
+  double estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot);
+
+  double k_beta;
+
 private:
   Chassis chassis_;
-
-  double k_beta_;
 };
 
 }

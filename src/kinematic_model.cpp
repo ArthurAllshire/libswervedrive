@@ -8,10 +8,11 @@ namespace swervedrive {
  * @param chassis Chassis object containing the parameters for the KinematicModel to operate on.
  * @param k_beta The gain for wheel reconfiguration.
  */
-KinematicModel::KinematicModel(const Chassis& chassis, double k_beta) : chassis_(chassis), k_beta_(k_beta) {}
+KinematicModel::KinematicModel(const Chassis& chassis, double k_beta=1) : k_beta(k_beta), chassis_(chassis) {}
 
 /**
- * @brief 
+ * @brief Compute the path to the desired chassis state and implement the control laws required to produce the motion.
+ * Note that currently this method does not currently support beta_bounds in the chassis (TODO!).
  * 
  * @param lambda_desired 
  * @param mu_desired 
@@ -26,7 +27,9 @@ std::pair<Nu, Lambda> KinematicModel::compute_chassis_motion(Lambda lambda_desir
     Lambda lamda_estimated, double mu_estimated,
     double k_backtrack, double k_lambda, double k_mu)
 {
-
+    // placeholder
+    std::pair<Nu, Lambda> ret;
+    return ret;
 }
 
 /**
@@ -37,7 +40,8 @@ std::pair<Nu, Lambda> KinematicModel::compute_chassis_motion(Lambda lambda_desir
  */
 double KinematicModel::compute_mu(Lambda, double phi_dot)
 {
-
+    // placeholder
+    return 0.0;
 }
 
 /**
@@ -54,7 +58,9 @@ double KinematicModel::compute_mu(Lambda, double phi_dot)
 Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot,
     double mu, double mu_dot, Eigen::VectorXd betas)
 {
-
+    // placeholder
+    Motion motion;
+    return motion;
 }
 
 /**
@@ -66,7 +72,9 @@ Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot,
  */
 Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated)
 {
-
+    // placeholder
+    Motion motion;
+    return motion;
 }
 
 /**
@@ -78,7 +86,8 @@ Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::
  */
 Xi KinematicModel::compute_odometry(Lambda, double mu, double dt)
 {
-
+    // placeholder
+    return Eigen::Vector3d::Zero(3);
 }
 
 /**
@@ -89,6 +98,8 @@ Xi KinematicModel::compute_odometry(Lambda, double mu, double dt)
  */
 double KinematicModel::estimate_mu(Lambda, Eigen::VectorXd phi_dot)
 {
+    // placeholder
+    return 0.0;
 
 }
 
