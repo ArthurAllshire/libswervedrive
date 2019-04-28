@@ -61,13 +61,16 @@ public:
   //! Distance from chassis centre to each module rotation axis, reported along the W axis (each column represents one
   //! module)
   Eigen::MatrixXd l_;
+  //! Distance from the rotation axis of each module to its wheel's contact with the ground (each column represents one
+  //! module)
+  Eigen::MatrixXd b_;
 
   //! Array containing the angle to each of the modules measured counter clockwise from the x-axis in radians
   Eigen::VectorXd alpha_;
   //! Distance from the centre of the robot to each module's steering axis, in m
   Eigen::VectorXd l_vector_;
   //! Horizontal distance from the axis of rotation of each module to its contact with the gound, in m
-  Eigen::VectorXd b_;
+  Eigen::VectorXd b_vector_;
   //! Radii of the wheels, in m
   Eigen::VectorXd r_;
   //! Min/max allowable value for steering angle, in rad.

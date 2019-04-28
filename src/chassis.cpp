@@ -22,7 +22,7 @@ Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd b, VectorXd r, Bounds beta
                  Bounds beta_2dot_bounds, Bounds phi_dot_bounds, Bounds phi_2dot_bounds)
   : alpha_(alpha)
   , l_vector_(l)
-  , b_(b)
+  , b_vector_(b)
   , r_(r)
   , beta_bounds_(beta_bounds)
   , beta_dot_bounds_(beta_dot_bounds)
@@ -41,6 +41,8 @@ Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd b, VectorXd r, Bounds beta
 
   l_ = MatrixXd(3, n_);
   l_ << MatrixXd::Zero(2, n_), l_vector_.transpose();
+  b_ = MatrixXd(3, n_);
+  b_ <<  MatrixXd::Zero(2, n_), b_vector_.transpose();
 }
 
 /**

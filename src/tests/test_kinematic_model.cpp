@@ -67,3 +67,29 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
     assert np.isclose(phi_dot_prime[0,0], 20, atol=1e-2)
     */
 }
+
+TEST_F(KinematicTest, TestEstimateMu) {
+    Lambda lambda = chassis->cartesian_to_lambda(0, 0);
+    double expected = 1.0; // rad / s
+    VectorXd phi_dot(4);
+    phi_dot << 1, 1, 1, 1;
+    double mu = kinematicmodel->estimate_mu(lambda, phi_dot);
+    EXPECT_TRUE(abs(
+        mu - expected * chassis->r_(0)
+        ) < 1e-2
+        ) << "Calculated mu: " << mu << " Expected mu " << expected << "chassis r" << chassis->r_(0)
+        << "\nLambda:\n" << lambda;
+
+    lambda = chassis->cartesian_to_lambda(2, 0);
+    expected = 1.0; // rad / s
+    phi_dot << -expected * 1.0,
+               -expected*std::sqrt(5.0),
+               expected*3.0,
+               expected*std::sqrt(5.0);
+    mu = kinematicmodel->estimate_mu(lambda, phi_dot);
+    EXPECT_TRUE(abs(
+        mu - expected * chassis->r_(0)
+        ) < 1e-2
+        ) << "Calculated mu: " << mu << " Expected mu " << expected
+        << "\nLambda:\n" << lambda;
+}
