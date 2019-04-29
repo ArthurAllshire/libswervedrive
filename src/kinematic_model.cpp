@@ -102,25 +102,24 @@ double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
     using namespace Eigen;
     using namespace swervedrive;
     // b divided by r of each module
-    RowVectorXd b_on_r = chassis_.b_vector_.cwiseQuotient(chassis_.r_);
-    MatrixXd b_on_r_block(3, chassis_.n_);
+    VectorXd b_on_r = chassis_.b_vector_.cwiseQuotient(chassis_.r_);
+    MatrixXd b_on_r_block(chassis_.n_, 3);
     b_on_r_block << b_on_r, b_on_r, b_on_r;
-    b_on_r_block.transposeInPlace();
 
     std::pair<MatrixXd, MatrixXd> s_perp = chassis_.s_perp(lambda);
-    RowVectorXd s2d = s_perp.second.transpose() * lambda;
-    MatrixXd s2d_block(3, chassis_.n_);
+    VectorXd s2d = s_perp.second.transpose() * lambda;
+    MatrixXd s2d_block(chassis_.n_, 3);
     s2d_block << s2d, s2d, s2d;
-    MatrixXd C = s_perp.first.cwiseQuotient(s2d_block);
-    C.transposeInPlace();
+    MatrixXd C = s_perp.first.transpose().cwiseQuotient(s2d_block);
 
-    VectorXd D = (s_perp.second - chassis_.b_).transpose() * lambda;
+    VectorXd D = ((s_perp.second - chassis_.b_).transpose() * lambda)
+                 .cwiseQuotient(chassis_.r_);
 
     // build the matrix (from equation 19 in the control paper)
     MatrixXd k_lambda(chassis_.n_ + 1, 4);
     k_lambda.block(0, 0, 1, 4) << lambda.transpose(), 0.;
     k_lambda.block(1, 0, chassis_.n_, 3) << b_on_r_block.cwiseProduct(C);
-    k_lambda.block(0, 3, chassis_.n_, 1) << D;
+    k_lambda.block(1, 3, chassis_.n_, 1) << D;
     
     VectorXd phi_dot_augmented(chassis_.n_ + 1);
     phi_dot_augmented << 0, phi_dot;
