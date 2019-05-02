@@ -70,25 +70,26 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
 
 TEST_F(KinematicTest, TestEstimateMu) {
     Lambda lambda = chassis->cartesian_to_lambda(0, 0);
-    double expected = 1.0; // rad / s
+    double expected = 1.0 * chassis->r_(0); // rad / s
     VectorXd phi_dot(4);
     phi_dot << 1, 1, 1, 1;
     double mu = kinematicmodel->estimate_mu(lambda, phi_dot);
     EXPECT_TRUE(abs(
-        mu - expected * chassis->r_(0)
+        mu - expected
         ) < 1e-2
         ) << "Calculated mu: " << mu << " Expected mu " << expected << "chassis r" << chassis->r_(0)
         << "\nLambda:\n" << lambda;
 
     lambda = chassis->cartesian_to_lambda(2, 0);
-    expected = 1.0; // rad / s
+    expected = 1.0 * chassis->r_(0); // rad / s
     phi_dot << -expected * 1.0,
                -expected*std::sqrt(5.0),
                expected*3.0,
                expected*std::sqrt(5.0);
+    phi_dot = phi_dot/chassis->r_(0);
     mu = kinematicmodel->estimate_mu(lambda, phi_dot);
     EXPECT_TRUE(abs(
-        mu - expected * chassis->r_(0)
+        mu - expected
         ) < 1e-2
         ) << "Calculated mu: " << mu << " Expected mu " << expected
         << "\nLambda:\n" << lambda;
