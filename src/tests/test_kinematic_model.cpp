@@ -10,25 +10,21 @@ using namespace Eigen;
 using namespace swervedrive;
 
 TEST_F(KinematicTest, TestComputeActuatorMotion) {
-    // Lambda lambda;
-    // lambda << 0, 0, 1;
-    // Lambda lambda_dot;
-    // lambda_dot << 0, 0, 1;
-    // Lambda lambda_2dot;
-    // lambda_2dot << 0, 0, -1;
-    // double mu = 1.0;
-    // double mu_dot = 1.0;
-    // VectorXd betas;
-    // betas << 0, 0, 0, 0;
+    Lambda lambda;
+    lambda << 0, 0, 1;
+    Lambda lambda_dot;
+    lambda_dot << 0, 0, 1;
+    Lambda lambda_2dot;
+    lambda_2dot << 0, 0, -1;
+    double mu = 1.0;
+    double mu_dot = 1.0;
+    
+    Motion motion = kinematicmodel->compute_actuator_motion(
+        lambda, lambda_dot, lambda_2dot, mu, mu_dot
+    );
 
 
-    // TODO: figure out how to implement test - in original beta not included in call
     /*
-    beta_prime, beta_2prime, phi_dot, phi_dot_prime = kinematic_model.compute_actuators_motion(
-        lmda, lmda_dot, lmda_2dot, mu, mu_dot
-    )
-
-    """
     We do the calculations by hand to check that this is correct
     Consider the first wheel
     alpha = 0
@@ -60,12 +56,56 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
     phi_dot_prime = ([-1 0 1]-[0 0 0]).([0 0 1]*1+[0 0 1]*1)-0*0)/0.1
         = ([-1 0 1].[0 0 2])/0.1
         = 20
-    """
-    assert np.isclose(beta_prime[0,0], 0.0, atol=1e-2)
-    assert np.isclose(beta_2prime[0,0], 0.0, atol=1e-2)
-    assert np.isclose(phi_dot[0,0], 10, atol=1e-2)
-    assert np.isclose(phi_dot_prime[0,0], 20, atol=1e-2)
     */
+
+   double tol = 1e-2;
+   ModuleMotion m = motion[0];
+   EXPECT_TRUE(abs(m.beta_dot - 0.0) < tol)
+     << "Beta dot " << m.beta_dot
+     << "Expected " << 0;
+   EXPECT_TRUE(abs(m.beta_2dot - 0.0) < tol)
+     << "Beta 2dot " << m.beta_2dot
+     << "Expected " << 0;
+   EXPECT_TRUE(abs(m.phi_dot - 10.0) < tol)
+     << "Phi Dot " << m.phi_dot
+     << "Expected " << 10.0;
+   EXPECT_TRUE(abs(m.phi_2dot - 20.0) < tol)
+     << "Phi Dot " << m.phi_2dot
+     << "Expected " << 20.0;
+}
+
+TEST_F(KinematicTest, TestComputesActuatorMotionReverse) {
+    // Test that reversing lambda and mu (and thus their
+    // derivatives) results in no change in actuator
+    // motion
+    Lambda lambda;
+    lambda << 0.99978376, -0.0, 0.02079483;
+    Lambda lambda_dot;
+    lambda_dot << 0.02162124, 0.0, -1.03951656;
+    Lambda lambda_2dot;
+    lambda_2dot << 0, 0, -51.98706951;
+    double mu = 126.4;
+    double mu_dot = 1.0;
+
+    Motion motion = kinematicmodel->compute_actuator_motion(
+        lambda, lambda_dot, lambda_2dot, mu, mu_dot
+    );
+
+    Motion motion_neg = kinematicmodel->compute_actuator_motion(
+        -lambda, -lambda_dot, -lambda_2dot, -mu, -mu_dot
+    );
+
+    double tol = 1e-8;
+    for (uint i=0; i<motion.size(); ++i) {
+        EXPECT_TRUE(abs(
+            motion[i].beta_dot - motion_neg[i].beta_dot
+        ) < tol
+        )
+        << "Module " << i << "Beta Dot Expected: "
+        << motion[i].beta_dot << " Negative input is "
+        << motion_neg[i].beta_dot
+        ;
+    }
 }
 
 TEST_F(KinematicTest, TestEstimateMu) {
@@ -94,3 +134,4 @@ TEST_F(KinematicTest, TestEstimateMu) {
         ) << "Calculated mu: " << mu << " Expected mu " << expected
         << "\nLambda:\n" << lambda;
 }
+

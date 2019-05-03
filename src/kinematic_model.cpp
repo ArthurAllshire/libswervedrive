@@ -8,7 +8,9 @@ namespace swervedrive {
  * @param chassis Chassis object containing the parameters for the KinematicModel to operate on.
  * @param k_beta The gain for wheel reconfiguration.
  */
-KinematicModel::KinematicModel(const Chassis& chassis, double k_beta=1) : k_beta(k_beta), chassis_(chassis) {}
+KinematicModel::KinematicModel(const Chassis& chassis, double k_beta=1) : k_beta(k_beta), chassis_(chassis) {
+    state = STOPPING;
+}
 
 /**
  * @brief Compute the path to the desired chassis state and implement the control laws required to produce the motion.
@@ -56,10 +58,12 @@ double KinematicModel::compute_mu(Lambda, double phi_dot)
  * @return Motion 
  */
 Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot,
-    double mu, double mu_dot, Eigen::VectorXd betas)
+    double mu, double mu_dot)
 {
     // placeholder
     Motion motion;
+    ModuleMotion mm;
+    motion.push_back(mm);
     return motion;
 }
 
