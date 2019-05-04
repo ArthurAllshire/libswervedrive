@@ -55,7 +55,7 @@ protected:
 
     ChassisTest::SetUp();
 
-    kinematicmodel = new KinematicModel(*chassis, 1.);
+    kinematicmodel = new KinematicModel(*chassis, 0.25);
 
   }
 

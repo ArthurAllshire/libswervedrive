@@ -3,9 +3,6 @@
 #include "libswervedrive/chassis.h"
 #include "chassis_fixture.h"
 
-class TimeScalerTest : KinematicTest {
-};
-
 using namespace Eigen;
 using namespace swervedrive;
 
@@ -135,3 +132,29 @@ TEST_F(KinematicTest, TestEstimateMu) {
         << "\nLambda:\n" << lambda;
 }
 
+TEST_F(KinematicTest, TestReconfigureWheels) {
+    // basic test - TODO expand for wrapping etc once we nail down
+    // ranges etc to ensure it works with wrapping
+    kinematicmodel->state = RECONFIGURING;
+
+    // pi/8 chosen to avoid any wrapping issues (only pi/4 difference,
+    // so under pi/2)
+    VectorXd beta_d(4);
+    beta_d << -M_PI/8, -M_PI/8, -M_PI/8, -M_PI/8;
+    VectorXd beta_e(4);
+    beta_e << M_PI/8, M_PI/8, M_PI/8, M_PI/8;
+
+    Motion motion = kinematicmodel->reconfigure_wheels(beta_d, beta_e);
+    for(int i = 0; i<motion.size(); ++i) {
+        double expected= 
+                (beta_d - beta_e)(i)*kinematicmodel->k_beta;
+        EXPECT_TRUE(
+            abs(
+                expected - motion[i].beta_dot
+                ) < 1e-8
+        ) << "Module " << i << " Expected " << expected
+          << " Returned " << motion[i].beta_dot;
+    }
+    EXPECT_TRUE(motion.size() == 4) << "Returned Motion object has "
+        << motion.size() << " elements. Expected " << 4;
+}

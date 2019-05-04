@@ -130,9 +130,24 @@ Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot,
  */
 Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated)
 {
-    // placeholder
-    Motion motion;
-    return motion;
+    using namespace Eigen;
+    using namespace swervedrive;
+    VectorXd displacement = chassis_.displacement(betas_estimated, betas_desired);
+    VectorXd beta_dot = k_beta * displacement;
+    if (displacement.norm() < M_PI/180 * chassis_.n_) {
+        state = RUNNING;
+    }
+    Motion m;
+    // TODO: investigate some sort of motion profiling / smoothing here?
+    for (int i = 0; i < chassis_.n_; ++i) {
+        ModuleMotion mm;
+        mm.beta_dot = beta_dot(i);
+        mm.beta_2dot = 0;
+        mm.phi_dot = 0;
+        mm.phi_2dot = 0;
+        m.push_back(mm);
+    }
+    return m;
 }
 
 /**
