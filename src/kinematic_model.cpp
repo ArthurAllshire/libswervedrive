@@ -60,11 +60,65 @@ double KinematicModel::compute_mu(Lambda, double phi_dot)
 Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot,
     double mu, double mu_dot)
 {
-    // placeholder
-    Motion motion;
-    ModuleMotion mm;
-    motion.push_back(mm);
-    return motion;
+    using namespace Eigen;
+    using namespace swervedrive;
+
+    if (state == STOPPING && abs(mu) < 1e-3) {
+        // stopped, so we can reconfigure
+        state = RECONFIGURING;
+    }
+
+    std::pair<MatrixXd, MatrixXd> s_perp = chassis_.s_perp(lambda);
+
+    VectorXd denom = s_perp.second.transpose() * lambda;
+    // don't divide by 0!
+    denom = denom.unaryExpr([](double x) {
+        if (abs(x) < 1e-20) {
+            // preserve the sign of the entry
+            return x >= 0 ? 1e-20 : -1e-20;
+        } else {
+            return x;
+        }
+    });
+
+    // equation 15a
+    VectorXd beta_dot = -(
+        s_perp.first.transpose() * lambda_dot
+    ).cwiseQuotient(denom);
+
+    // equation 15b
+    VectorXd beta_2dot = -(
+        2 * beta_dot.cwiseProduct(
+            s_perp.second.transpose() * lambda_dot
+            )
+        + s_perp.first.transpose() * lambda_2dot
+    ).cwiseQuotient(denom);
+
+    // equation 15c
+    VectorXd phi_dot = (
+        mu * (s_perp.second - chassis_.b_).transpose() * lambda
+        - chassis_.b_vector_.cwiseProduct(beta_dot)
+    ).cwiseQuotient(chassis_.r_);
+
+    // equation 15d
+    VectorXd phi_2dot = (
+        (
+            (s_perp.second - chassis_.b_).transpose()
+            * (mu*lambda_dot + mu_dot*lambda)
+        ) -
+        chassis_.b_vector_.cwiseProduct(beta_2dot)
+    ).cwiseQuotient(chassis_.r_);
+
+    Motion m;
+    for (int i = 0; i < chassis_.n_; ++i) {
+        ModuleMotion mm;
+        mm.beta_dot = beta_dot[i];
+        mm.beta_2dot = beta_2dot[i];
+        mm.phi_dot = phi_dot[i];
+        mm.phi_2dot = phi_2dot[i];
+        m.push_back(mm);
+    }
+    return m;
 }
 
 /**

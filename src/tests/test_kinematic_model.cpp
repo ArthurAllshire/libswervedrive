@@ -50,12 +50,12 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
         [-1 0 1].[0 0 1]
         = (0+0)/1
         = 0
-    phi_dot = ([-1 0 1]-[0 0 0]).[0 0 1]*1-0*0)/0.1
-        = 1/0.1
-        = 10
-    phi_dot_prime = ([-1 0 1]-[0 0 0]).([0 0 1]*1+[0 0 1]*1)-0*0)/0.1
-        = ([-1 0 1].[0 0 2])/0.1
-        = 20
+    phi_dot = ([-1 0 1]-[0 0 0]).[0 0 1]*1-0*0)/0.5
+        = 1/0.5
+        = 2
+    phi_dot_prime = ([-1 0 1]-[0 0 0]).([0 0 1]*1+[0 0 1]*1)-0*0)/0.5
+        = ([-1 0 1].[0 0 2])/0.5
+        = 4
     */
 
    double tol = 1e-2;
@@ -66,12 +66,12 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
    EXPECT_TRUE(abs(m.beta_2dot - 0.0) < tol)
      << "Beta 2dot " << m.beta_2dot
      << "Expected " << 0;
-   EXPECT_TRUE(abs(m.phi_dot - 10.0) < tol)
+   EXPECT_TRUE(abs(m.phi_dot - 2.0) < tol)
      << "Phi Dot " << m.phi_dot
-     << "Expected " << 10.0;
-   EXPECT_TRUE(abs(m.phi_2dot - 20.0) < tol)
+     << "Expected " << 2.0;
+   EXPECT_TRUE(abs(m.phi_2dot - 4.0) < tol)
      << "Phi Dot " << m.phi_2dot
-     << "Expected " << 20.0;
+     << "Expected " << 4.0;
 }
 
 TEST_F(KinematicTest, TestComputesActuatorMotionReverse) {
