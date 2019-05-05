@@ -151,16 +151,30 @@ Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::
 }
 
 /**
- * @brief 
+ * @brief Update an estimate of xi (twist position) based on the ICR/mu estimates.
  * 
- * @param mu 
- * @param dt 
- * @return Xi 
+ * @param xi twist position to update
+ * @param mu robot's position about the icr, as described in the relevant papers.
+ * @param dt time since estimate was last updated
+ * @return Xi the updated twist position
  */
-Xi KinematicModel::compute_odometry(Lambda lambda, double mu, double dt)
+Xi KinematicModel::compute_odometry(const Xi& xi, const Lambda& lambda, const double& mu, const double& dt)
 {
-    // placeholder
-    return Eigen::Vector3d::Zero(3);
+    using namespace Eigen;
+    using namespace swervedrive;
+    VectorXd xi_dot(3);
+    // equation 2
+    xi_dot << lambda(1), -lambda(0), lambda(2);
+    xi_dot *= mu;
+    double theta = xi(2);
+
+    MatrixXd m3(3, 3);
+    m3 << cos(theta), -sin(theta), 0,
+          sin(theta), cos(theta), 0,
+          0, 0, 1;
+    Xi xi_prime = xi + m3 * xi_dot * dt; // equation 24
+    return xi_prime;
+
 }
 
 /**

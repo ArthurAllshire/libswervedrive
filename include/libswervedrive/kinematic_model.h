@@ -23,11 +23,12 @@ public:
   Motion compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot,
       double mu, double mu_dot);
   Motion reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated);
-  Xi compute_odometry(Lambda lambda, double mu, double dt);
+  Xi compute_odometry(const Xi& xi, const Lambda& lambda, const double& mu, const double& dt);
   double estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot);
 
   double k_beta;
   State state;
+  Xi xi;
 
 private:
   Chassis chassis_;
