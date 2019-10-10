@@ -194,7 +194,7 @@ std::vector<Lambda> Estimator::select_starting_points(const Eigen::VectorXd& q) 
   d << cos(angle_sum.array()), sin(angle_sum.array()), VectorXd(chassis_.n_);
 
   vector<Vector3d> p;
-  for (int idx = 0; idx < chassis_.n_; ++idx)
+  for (unsigned int idx = 0; idx < chassis_.n_; ++idx)
   {
     Vector3d si = chassis_.s_.col(idx);
     Vector3d di = d.row(idx);
@@ -203,10 +203,10 @@ std::vector<Lambda> Estimator::select_starting_points(const Eigen::VectorXd& q) 
   }
 
   vector<Lambda> starting_points;
-  for (int i = 0; i < chassis_.n_; ++i)
+  for (unsigned int i = 0; i < chassis_.n_; ++i)
   {
     auto p_i = p[i];
-    for (int j = i + 1; j < chassis_.n_; ++j)
+    for (unsigned int j = i + 1; j < chassis_.n_; ++j)
     {
       auto p_j = p[j];
       if (p_i.isApprox(p_j) || p_i.isApprox(-p_j))

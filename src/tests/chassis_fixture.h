@@ -17,25 +17,23 @@ protected:
     VectorXd b = VectorXd::Constant(4, 0);        // No offset of wheels from axis
     VectorXd r = VectorXd::Constant(4, 0.5);      // D=1m -> theta rad rotation gives theta metres displacement
 
-    double beta_bounds_arr[2] = {-10., 10.};
-    double phi_dot_bounds_arr[2] = {-10., 10.};
-    double beta_dot_bounds_arr[2] = {-1 , 1};
-    double beta_2dot_bounds_arr[2] = {-1 , 1};
-    double phi_2dot_bounds_arr[2] = {-1 , 1};
-    Bounds beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds;
-    for (int i = 0; i < 4; ++i) {
-      beta_bounds.push_back(Map<Vector2d>(beta_bounds_arr));
-      beta_dot_bounds.push_back(Map<Vector2d>(beta_dot_bounds_arr));
-      beta_2dot_bounds.push_back(Map<Vector2d>(beta_2dot_bounds_arr));
-      phi_dot_bounds.push_back(Map<Vector2d>(phi_dot_bounds_arr));
-      phi_2dot_bounds.push_back(Map<Vector2d>(phi_2dot_bounds_arr));
-    }
+    Vector2d beta_bounds_arr = {-10., 10.};
+    Vector2d phi_dot_bounds_arr = {-10., 10.};
+    Vector2d beta_dot_bounds_arr = {-1 , 1};
+    Vector2d beta_2dot_bounds_arr = {-1 , 1};
+    Vector2d phi_2dot_bounds_arr = {-1 , 1};
+    Bounds beta_bounds = Bounds(4, beta_bounds_arr);
+    Bounds beta_dot_bounds = Bounds(4, beta_dot_bounds_arr);
+    Bounds beta_2dot_bounds = Bounds(4, beta_2dot_bounds_arr);
+    Bounds phi_dot_bounds = Bounds(4, phi_dot_bounds_arr);
+    Bounds phi_2dot_bounds = Bounds(4, phi_2dot_bounds_arr);
 
-
-    chassis =
-        new Chassis(alpha, l, b, r,
-          beta_bounds, beta_dot_bounds, beta_2dot_bounds, phi_dot_bounds, phi_2dot_bounds
-        );
+    chassis = new Chassis(alpha, l, r, b);
+    chassis -> setBetaBounds(beta_bounds);
+    chassis -> setBetaDotBounds(beta_dot_bounds);
+    chassis -> setBeta2DotBounds(beta_2dot_bounds);
+    chassis -> setPhiDotBounds(phi_dot_bounds);
+    chassis -> setPhi2DotBounds(phi_2dot_bounds);
   }
 
   virtual void TearDown() override
@@ -66,7 +64,6 @@ protected:
   }
 
   swervedrive::KinematicModel* kinematicmodel;
-  
 };
 
 #endif

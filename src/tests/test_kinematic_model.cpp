@@ -145,7 +145,7 @@ TEST_F(KinematicTest, TestReconfigureWheels) {
     beta_e << M_PI/8, M_PI/8, M_PI/8, M_PI/8;
 
     Motion motion = kinematicmodel->reconfigure_wheels(beta_d, beta_e);
-    for(int i = 0; i<motion.size(); ++i) {
+    for(unsigned int i = 0; i<motion.size(); ++i) {
         double expected= 
                 (beta_d - beta_e)(i)*kinematicmodel->k_beta;
         EXPECT_TRUE(

@@ -10,25 +10,14 @@ namespace swervedrive
  * @param alpha Array containing the angle to each of the modules measured counter clockwise from the x-axis in
  * radians
  * @param l Distance from the centre of the robot to each module's steering axis, in m
- * @param b Horizontal distance from the axis of rotation of each module to its contact with the gound, in m
  * @param r Radii of the wheels, in m
- * @param beta_bounds Min/max allowable value for steering angle, in rad.
- * @param beta_dot_bounds Min/max allowable value for rotation rate of modules, in rad/s
- * @param beta_2dot_bounds Min/max allowable value for the angular acceleration of the modules, in rad/s^2.
- * @param phi_dot_bounds Min/max allowable value for rotation rate of module wheels, in rad/s
- * @param phi_2dot_bounds  Min/max allowable value for the angular acceleration of the module wheels, in rad/s^2.
+ * @param b Horizontal distance from the axis of rotation of each module to its contact with the gound, in m
  */
-Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd b, VectorXd r, Bounds beta_bounds, Bounds beta_dot_bounds,
-                 Bounds beta_2dot_bounds, Bounds phi_dot_bounds, Bounds phi_2dot_bounds)
+Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd r, VectorXd b)
   : alpha_(alpha)
   , l_vector_(l)
-  , b_vector_(b)
   , r_(r)
-  , beta_bounds_(beta_bounds)
-  , beta_dot_bounds_(beta_dot_bounds)
-  , beta_2dot_bounds_(beta_2dot_bounds)
-  , phi_dot_bounds_(phi_dot_bounds)
-  , phi_2dot_bounds_(phi_2dot_bounds)
+  , b_vector_(b)
 {
   n_ = alpha.size();
   a_ = MatrixXd(3, n_);
@@ -43,6 +32,90 @@ Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd b, VectorXd r, Bounds beta
   l_ << MatrixXd::Zero(2, n_), l_vector_.transpose();
   b_ = MatrixXd(3, n_);
   b_ <<  MatrixXd::Zero(2, n_), b_vector_.transpose();
+
+  // Set unlimited bounds by default
+  Vector2d unlimited = {-1.0e10, 1.0e10};
+  beta_bounds_ = Bounds(n_, unlimited);
+  beta_dot_bounds_ = Bounds(n_, unlimited);
+  beta_2dot_bounds_ = Bounds(n_, unlimited);
+  phi_dot_bounds_ = Bounds(n_, unlimited);
+  phi_2dot_bounds_ = Bounds(n_, unlimited);
+}
+
+/**
+ * @brief Construct a new Chassis object
+ *
+ * @param alpha Array containing the angle to each of the modules measured counter clockwise from the x-axis in
+ * radians
+ * @param l Distance from the centre of the robot to each module's steering axis, in m
+ * @param r Radii of the wheels, in m
+ */
+Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd r) : Chassis(alpha, l, r, VectorXd::Zero(alpha.size()))
+{}
+
+/**
+ * @param beta_bounds Min/max allowable value for steering angle, in rad.
+ */
+bool Chassis::setBetaBounds(Bounds bounds)
+{
+  if (bounds.size() == n_) {
+    beta_bounds_ = bounds;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * @param beta_dot_bounds Min/max allowable value for rotation rate of modules, in rad/s
+ */
+bool Chassis::setBetaDotBounds(Bounds bounds)
+{
+  if (bounds.size() == n_) {
+    beta_dot_bounds_ = bounds;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * @param beta_2dot_bounds Min/max allowable value for the angular acceleration of the modules, in rad/s^2.
+ */
+bool Chassis::setBeta2DotBounds(Bounds bounds)
+{
+  if (bounds.size() == n_) {
+    beta_2dot_bounds_ = bounds;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * @param phi_dot_bounds Min/max allowable value for rotation rate of module wheels, in rad/s
+ */
+bool Chassis::setPhiDotBounds(Bounds bounds)
+{
+  if (bounds.size() == n_) {
+    phi_dot_bounds_ = bounds;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * @param phi_2dot_bounds  Min/max allowable value for the angular acceleration of the module wheels, in rad/s^2.
+ */
+bool Chassis::setPhi2DotBounds(Bounds bounds)
+{
+  if (bounds.size() == n_) {
+    phi_2dot_bounds_ = bounds;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /**
@@ -59,7 +132,7 @@ VectorXd Chassis::betas(const Lambda& lambda) const
   auto x = ((a_ - l_).transpose() * lambda);
   // the steering angles array to be returned
   VectorXd betas(n_);
-  for (int idx = 0; idx < n_; ++idx)
+  for (unsigned int idx = 0; idx < n_; ++idx)
   {
     if (abs(x[idx]) < numerical_zero_thresh_)
     {
@@ -98,7 +171,7 @@ VectorXd Chassis::displacement(const VectorXd& q_init, const VectorXd& q_final) 
  */
 std::optional<int> Chassis::singularity(const Lambda& lambda) const
 {
-  for (int idx = 0; idx < n_; ++idx)
+  for (unsigned int idx = 0; idx < n_; ++idx)
   {
     auto s = s_.col(idx).normalized();
     if (s.isApprox(lambda))
@@ -127,7 +200,7 @@ double Chassis::lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const
 
 /**
  * @brief Calculates the s_perp (1 and 2) value from the pappers.
- * 
+ *
  * @param lambda Lambda to calculate s_perp 1 and 2 based on.
  * @return std::pair<Eigen::MatrixXd, Eigen::MatrixXd> a pair of (s1, s2)
  */

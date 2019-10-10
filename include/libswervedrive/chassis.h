@@ -34,46 +34,57 @@ using Motion = std::vector<ModuleMotion>;
  */
 class Chassis
 {
+using MatrixXd = Eigen::MatrixXd;
+using VectorXd = Eigen::VectorXd;
+
 public:
+  Chassis(VectorXd alpha, VectorXd l, VectorXd r);
+  Chassis(VectorXd alpha, VectorXd l, VectorXd r, VectorXd b);
   Chassis(Eigen::VectorXd alpha, Eigen::VectorXd l, Eigen::VectorXd b, Eigen::VectorXd r, Bounds beta_bounds,
           Bounds beta_dot_bounds, Bounds beta_2dot_bounds, Bounds phi_dot_bounds, Bounds phi_2dot_bounds);
   ~Chassis() = default;
 
-  Eigen::VectorXd betas(const Lambda& lambda) const;
-  double lambda_joint_dist(const Eigen::VectorXd& q, const Lambda& lambda) const;
-  Eigen::VectorXd displacement(const Eigen::VectorXd& q1, const Eigen::VectorXd& q2) const;
+  bool setBetaBounds(Bounds);
+  bool setBetaDotBounds(Bounds);
+  bool setBeta2DotBounds(Bounds);
+  bool setPhiDotBounds(Bounds);
+  bool setPhi2DotBounds(Bounds);
+
+  VectorXd betas(const Lambda& lambda) const;
+  double lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const;
+  VectorXd displacement(const VectorXd& q1, const VectorXd& q2) const;
   std::optional<int> singularity(const Lambda& lambda) const;
   std::pair<Eigen::MatrixXd, Eigen::MatrixXd> s_perp(const Lambda& lambda);
 
   Lambda cartesian_to_lambda(double x, double y);
 
   //! Number of wheels
-  int n_;
+  unsigned int n_;
 
   //! Orthogonal projection onto the H-sphere's equator of steering x-axis basis vector (each column represents one
   //! module)
-  Eigen::MatrixXd a_;
+  MatrixXd a_;
   //! Orthogonal projection onto the H-sphere's equator of steering y-axis basis vector (each column represents one
   //! module)
-  Eigen::MatrixXd a_orth_;
+  MatrixXd a_orth_;
   //! Vectors through steering axes
-  Eigen::MatrixXd s_;
+  MatrixXd s_;
   //! Distance from chassis centre to each module rotation axis, reported along the W axis (each column represents one
   //! module)
-  Eigen::MatrixXd l_;
+  MatrixXd l_;
   //! Distance from the rotation axis of each module to its wheel's contact with the ground (each column represents one
   //! module)
-  Eigen::MatrixXd b_;
+  MatrixXd b_;
 
   //! Array containing the angle to each of the modules measured counter clockwise from the x-axis in radians
-  Eigen::VectorXd alpha_;
+  VectorXd alpha_;
   //! Distance from the centre of the robot to each module's steering axis, in m
-  Eigen::VectorXd l_vector_;
+  VectorXd l_vector_;
   //! Horizontal distance from the axis of rotation of each module to its contact with the gound, in m
-  Eigen::VectorXd b_vector_;
-  //! Radii of the wheels, in m
-  Eigen::VectorXd r_;
+  VectorXd r_;
   //! Min/max allowable value for steering angle, in rad.
+  VectorXd b_vector_;
+  //! Radii of the wheels, in m
   Bounds beta_bounds_;
   //! Min/max allowable value for rotation rate of modules, in rad/s
   Bounds beta_dot_bounds_;

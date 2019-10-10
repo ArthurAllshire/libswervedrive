@@ -4,7 +4,7 @@ namespace swervedrive {
 
 /**
  * @brief Construct a new Kinematic Model:: Kinematic Model object
- * 
+ *
  * @param chassis Chassis object containing the parameters for the KinematicModel to operate on.
  * @param k_beta The gain for wheel reconfiguration.
  */
@@ -15,15 +15,15 @@ KinematicModel::KinematicModel(const Chassis& chassis, double k_beta=1) : k_beta
 /**
  * @brief Compute the path to the desired chassis state and implement the control laws required to produce the motion.
  * Note that currently this method does not currently support beta_bounds in the chassis (TODO!).
- * 
- * @param lambda_desired 
- * @param mu_desired 
- * @param lamda_estimated 
- * @param mu_estimated 
- * @param k_backtrack 
- * @param k_lambda 
- * @param k_mu 
- * @return std::pair<Nu, Lambda> 
+ *
+ * @param lambda_desired
+ * @param mu_desired
+ * @param lamda_estimated
+ * @param mu_estimated
+ * @param k_backtrack
+ * @param k_lambda
+ * @param k_mu
+ * @return std::pair<Nu, Lambda>
  */
 std::pair<Nu, Lambda> KinematicModel::compute_chassis_motion(Lambda lambda_desired, double mu_desired,
     Lambda lamda_estimated, double mu_estimated,
@@ -35,10 +35,10 @@ std::pair<Nu, Lambda> KinematicModel::compute_chassis_motion(Lambda lambda_desir
 }
 
 /**
- * @brief 
- * 
- * @param phi_dot 
- * @return double 
+ * @brief
+ *
+ * @param phi_dot
+ * @return double
  */
 double KinematicModel::compute_mu(Lambda, double phi_dot)
 {
@@ -47,15 +47,15 @@ double KinematicModel::compute_mu(Lambda, double phi_dot)
 }
 
 /**
- * @brief 
- * 
- * @param lambda 
- * @param lambda_dot 
- * @param lambda_2dot 
- * @param mu 
- * @param mu_dot 
- * @param betas 
- * @return Motion 
+ * @brief
+ *
+ * @param lambda
+ * @param lambda_dot
+ * @param lambda_2dot
+ * @param mu
+ * @param mu_dot
+ * @param betas
+ * @return Motion
  */
 Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot,
     double mu, double mu_dot)
@@ -110,7 +110,7 @@ Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot,
     ).cwiseQuotient(chassis_.r_);
 
     Motion m;
-    for (int i = 0; i < chassis_.n_; ++i) {
+    for (unsigned int i = 0; i < chassis_.n_; ++i) {
         ModuleMotion mm;
         mm.beta_dot = beta_dot[i];
         mm.beta_2dot = beta_2dot[i];
@@ -122,11 +122,11 @@ Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot,
 }
 
 /**
- * @brief 
- * 
- * @param betas_desired 
- * @param betas_estimated 
- * @return Motion 
+ * @brief
+ *
+ * @param betas_desired
+ * @param betas_estimated
+ * @return Motion
  */
 Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated)
 {
@@ -139,7 +139,7 @@ Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::
     }
     Motion m;
     // TODO: investigate some sort of motion profiling / smoothing here?
-    for (int i = 0; i < chassis_.n_; ++i) {
+    for (unsigned int i = 0; i < chassis_.n_; ++i) {
         ModuleMotion mm;
         mm.beta_dot = beta_dot(i);
         mm.beta_2dot = 0;
@@ -152,7 +152,7 @@ Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::
 
 /**
  * @brief Update an estimate of xi (twist position) based on the ICR/mu estimates.
- * 
+ *
  * @param xi twist position to update
  * @param mu robot's position about the icr, as described in the relevant papers.
  * @param dt time since estimate was last updated
@@ -179,7 +179,7 @@ Xi KinematicModel::compute_odometry(const Xi& xi, const Lambda& lambda, const do
 
 /**
  * @brief Find the rotational position of the robot about the ICR.
- * 
+ *
  * @param lambda the current estimated ICR of the robot.
  * @param phi_dot angular velocities of the wheels.
  * @return double the estimate of mu.
@@ -207,7 +207,7 @@ double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
     k_lambda.block(0, 0, 1, 4) << lambda.transpose(), 0.;
     k_lambda.block(1, 0, chassis_.n_, 3) << b_on_r_block.cwiseProduct(C);
     k_lambda.block(1, 3, chassis_.n_, 1) << D;
-    
+
     VectorXd phi_dot_augmented(chassis_.n_ + 1);
     phi_dot_augmented << 0, phi_dot;
 
