@@ -128,10 +128,16 @@ bool Chassis::setPhi2DotBounds(Bounds bounds)
  */
 VectorXd Chassis::betas(const Lambda& lambda) const
 {
-  auto y = (a_orth_.transpose() * lambda);
-  auto x = ((a_ - l_).transpose() * lambda);
+  auto y = a_orth_.transpose() * lambda;
+  auto x = (a_ - l_).transpose() * lambda;
   // the steering angles array to be returned
   VectorXd betas(n_);
+
+  // Uncomment the line below to return values in the
+  // range [-pi, pi]
+  // Otherwise this will return [-pi/2, pi]
+  //betas = y.binaryExpr(x, [] (double y, double x) { return std::atan2(y,x);} ).matrix(); return betas;
+
   for (unsigned int idx = 0; idx < n_; ++idx)
   {
     if (abs(x[idx]) < numerical_zero_thresh_)
@@ -205,8 +211,9 @@ double Chassis::lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const
  * @return std::pair<Eigen::MatrixXd, Eigen::MatrixXd> a pair of (s1, s2)
  */
 std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::s_perp(const Lambda& lambda) {
-  RowVectorXd s = a_orth_.transpose() * lambda;
-  RowVectorXd c = (a_ - l_).transpose() * lambda;
+  auto beta = betas(lambda);
+  RowVectorXd s = beta.array().sin().matrix().transpose();
+  RowVectorXd c = beta.array().cos().matrix().transpose();
   MatrixXd s_block(3, n_);
   s_block << s, s, s;
   MatrixXd c_block(3, n_);
@@ -219,8 +226,9 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::s_perp(const Lambda& lambda
 
   MatrixXd s2_lmda = (
     (a_ - l_).cwiseProduct(c_block)
-    - a_orth_.cwiseProduct(s_block)
+    + a_orth_.cwiseProduct(s_block)
   );
+
   return std::pair(s1_lmda, s2_lmda);
 }
 

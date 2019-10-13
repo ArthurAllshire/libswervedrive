@@ -103,13 +103,23 @@ TEST_F(ChassisTest, CalculatesSPerp) {
 
   MatrixXd expected_s1(3, chassis->n_);
   MatrixXd expected_s2(3, chassis->n_);
-  expected_s1 <<  0, -1,  0,  1,
-                  1,  0, -1,  0,
+  expected_s1 <<  0,  1,  0, -1,
+                 -1,  0,  1,  0,
                   0,  0,  0,  0;
-  expected_s2 << -1,  0,  1,  0,
-                  0, -1,  0,  1,
-                  1,  1,  1,  1;
-  EXPECT_TRUE(s_perp.first.isApprox(expected_s1));
-  EXPECT_TRUE(s_perp.second.isApprox(expected_s2));
-
+  expected_s2 <<  1,  0, -1,  0,
+                  0,  1,  0, -1,
+                 -1, -1, -1, -1;
+  EXPECT_TRUE(s_perp.first.isApprox(expected_s1))
+    << s_perp.first;
+  EXPECT_TRUE(s_perp.second.isApprox(expected_s2))
+    << s_perp.second;
 }
+
+TEST_F(ChassisTest, ConvertsCartesianToLambda)
+{
+  auto lambda = chassis->cartesian_to_lambda(0, 0);
+  EXPECT_NEAR(lambda[0], 0.0, 1e-3);
+  EXPECT_NEAR(lambda[1], 0.0, 1e-3);
+  EXPECT_NEAR(lambda[2], 1.0, 1e-3);
+}
+

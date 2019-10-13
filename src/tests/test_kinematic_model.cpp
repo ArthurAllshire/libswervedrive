@@ -15,7 +15,7 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
     lambda_2dot << 0, 0, -1;
     double mu = 1.0;
     double mu_dot = 1.0;
-    
+
     Motion motion = kinematicmodel->compute_actuator_motion(
         lambda, lambda_dot, lambda_2dot, mu, mu_dot
     );
@@ -63,10 +63,10 @@ TEST_F(KinematicTest, TestComputeActuatorMotion) {
    EXPECT_TRUE(abs(m.beta_2dot - 0.0) < tol)
      << "Beta 2dot " << m.beta_2dot
      << "Expected " << 0;
-   EXPECT_TRUE(abs(m.phi_dot - 2.0) < tol)
+   EXPECT_TRUE(abs(m.phi_dot - -2.0) < tol)
      << "Phi Dot " << m.phi_dot
      << "Expected " << 2.0;
-   EXPECT_TRUE(abs(m.phi_2dot - 4.0) < tol)
+   EXPECT_TRUE(abs(m.phi_2dot - -4.0) < tol)
      << "Phi Dot " << m.phi_2dot
      << "Expected " << 4.0;
 }
@@ -107,9 +107,14 @@ TEST_F(KinematicTest, TestComputesActuatorMotionReverse) {
 
 TEST_F(KinematicTest, TestEstimateMu) {
     Lambda lambda = chassis->cartesian_to_lambda(0, 0);
-    double expected = 1.0 * chassis->r_(0); // rad / s
+    double theta_dot = 1.0; // rad / s
     VectorXd phi_dot(4);
-    phi_dot << 1, 1, 1, 1;
+    phi_dot << -theta_dot / chassis->r_[0],
+      -theta_dot / chassis->r_[1],
+      -theta_dot / chassis->r_[2],
+      -theta_dot / chassis->r_[3];
+    // theta_dot = mu * w  Controller paper eq(2)
+    double expected = theta_dot / lambda[2];
     double mu = kinematicmodel->estimate_mu(lambda, phi_dot);
     EXPECT_TRUE(abs(
         mu - expected
@@ -118,12 +123,30 @@ TEST_F(KinematicTest, TestEstimateMu) {
         << "\nLambda:\n" << lambda;
 
     lambda = chassis->cartesian_to_lambda(2, 0);
-    expected = 1.0 * chassis->r_(0); // rad / s
-    phi_dot << -expected * 1.0,
-               -expected*std::sqrt(5.0),
-               expected*3.0,
-               expected*std::sqrt(5.0);
-    phi_dot = phi_dot/chassis->r_(0);
+    theta_dot = 1.0; // rad / s
+    phi_dot = VectorXd(4);
+    phi_dot << theta_dot * 1.0 / chassis->r_[0],
+      -theta_dot*std::sqrt(5.0) / chassis->r_[1],
+      -theta_dot*3.0 / chassis->r_[2],
+      -theta_dot*std::sqrt(5.0) / chassis->r_[3];
+    // theta_dot = mu * w  Controller paper eq(2)
+    expected = theta_dot / lambda[2];
+    mu = kinematicmodel->estimate_mu(lambda, phi_dot);
+    EXPECT_TRUE(abs(
+        mu - expected
+        ) < 1e-2
+        ) << "Calculated mu: " << mu << " Expected mu " << expected
+        << "\nLambda:\n" << lambda;
+
+    lambda = chassis->cartesian_to_lambda(1, 1);
+    theta_dot = 1.0; // rad / s
+    phi_dot = VectorXd(4);
+    phi_dot << theta_dot * 1.0 / chassis->r_[0],
+      -theta_dot * 1.0 / chassis->r_[1],
+      -theta_dot * std::sqrt(5.0) / chassis->r_[2],
+      -theta_dot * std::sqrt(5.0) / chassis->r_[3];
+    // theta_dot = mu * w  Controller paper eq(2)
+    expected = theta_dot / lambda[2];
     mu = kinematicmodel->estimate_mu(lambda, phi_dot);
     EXPECT_TRUE(abs(
         mu - expected
@@ -146,7 +169,7 @@ TEST_F(KinematicTest, TestReconfigureWheels) {
 
     Motion motion = kinematicmodel->reconfigure_wheels(beta_d, beta_e);
     for(unsigned int i = 0; i<motion.size(); ++i) {
-        double expected= 
+        double expected=
                 (beta_d - beta_e)(i)*kinematicmodel->k_beta;
         EXPECT_TRUE(
             abs(

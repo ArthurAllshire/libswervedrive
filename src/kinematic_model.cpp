@@ -198,7 +198,6 @@ double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
     MatrixXd s2d_block(chassis_.n_, 3);
     s2d_block << s2d, s2d, s2d;
     MatrixXd C = s_perp.first.transpose().cwiseQuotient(s2d_block);
-
     VectorXd D = ((s_perp.second - chassis_.b_).transpose() * lambda)
                  .cwiseQuotient(chassis_.r_);
 
@@ -214,7 +213,6 @@ double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
     // Solve the least squares system using the normal equations
     // (as solving A^TAx = A^Tb is equivalent to solving Ax=b)
     Vector4d solution = (k_lambda.transpose() * k_lambda).ldlt().solve(k_lambda.transpose()*phi_dot_augmented);
-
     return solution(3);
 
 /*
