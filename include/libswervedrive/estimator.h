@@ -10,7 +10,6 @@
 
 namespace swervedrive
 {
-
 /**
  * @brief Represents the derivatives of each steering angle with respect to
  *        2/3 of u, v and w (the other has no value).

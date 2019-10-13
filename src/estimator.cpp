@@ -21,8 +21,8 @@ namespace swervedrive
  * @param singularity_tolerance how close a point must be to be considered to be
  *     'on a structural singularity'
  */
-Estimator::Estimator(const Chassis& chassis, Xi init, double eta_lambda, double eta_delta,
-                     double min_delta_line_search, double max_iter_lambda, double singularity_tolerance)
+Estimator::Estimator(const Chassis& chassis, Xi init, double eta_lambda, double eta_delta, double min_delta_line_search,
+                     double max_iter_lambda, double singularity_tolerance)
   : chassis_(chassis)
   , xi_(init)
   , eta_lambda_(eta_lambda)
@@ -47,28 +47,38 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
   Lambda closest_lambda = starting_points[0];
   double closest_dist = 1e99;
 
-  for (auto lambda_start : starting_points) {
+  for (auto lambda_start : starting_points)
+  {
     Lambda lambda = lambda_start;
     double total_displacement = chassis_.lambda_joint_dist(q, lambda_start);
 
-    if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_) {
+    if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_)
+    {
       return lambda;
-    } else {
-      for (int i=0; i < max_iter_lambda_; ++i) {
+    }
+    else
+    {
+      for (int i = 0; i < max_iter_lambda_; ++i)
+      {
         Derivatives d = compute_derivatives(lambda);
         Deltas deltas = solve(d, q, lambda);
         bool diverging;
         Lambda lambda_t = update_parameters(lambda, deltas, q, diverging);
 
-        //optional<int> singularity = chassis_.singularity(lambda_t);
+        // optional<int> singularity = chassis_.singularity(lambda_t);
         // TODO use the singularity calc
 
         double proposed_distance = chassis_.lambda_joint_dist(q, lambda);
-        if (proposed_distance > total_displacement) {
+        if (proposed_distance > total_displacement)
+        {
           break;
-        } else if ((lambda - lambda_t).norm() < eta_lambda_) {
+        }
+        else if ((lambda - lambda_t).norm() < eta_lambda_)
+        {
           return lambda_t;
-        } else if (proposed_distance < closest_dist) {
+        }
+        else if (proposed_distance < closest_dist)
+        {
           closest_dist = proposed_distance;
           closest_lambda = lambda_t;
         }
@@ -128,19 +138,18 @@ Derivatives Estimator::compute_derivatives(const Lambda& lambda) const
   auto omega = lambda.transpose() * chassis_.a_orth_;
   omega_block << omega, omega, omega;
 
-
   // 3 x n
-  MatrixXd gamma_top = (MatrixXd) omega_block.cwiseProduct(diff) + delta_block.cwiseProduct(chassis_.a_orth_);
+  MatrixXd gamma_top = (MatrixXd)omega_block.cwiseProduct(diff) + delta_block.cwiseProduct(chassis_.a_orth_);
   // 1 x n
-  RowVectorXd gamma_bottom = (RowVectorXd)
-      lambda.transpose() * (delta_block.cwiseProduct(diff) - omega_block.cwiseProduct(chassis_.a_orth_));
-
+  RowVectorXd gamma_bottom =
+      (RowVectorXd)lambda.transpose() * (delta_block.cwiseProduct(diff) - omega_block.cwiseProduct(chassis_.a_orth_));
 
   RowVectorXd S_m = (dm * gamma_top);
   RowVectorXd S_n = (dn * gamma_top);
 
   auto singularity = chassis_.singularity(lambda);
-  if (singularity) {
+  if (singularity)
+  {
     S_m(*singularity) = 0;
     S_n(*singularity) = 0;
 
@@ -247,35 +256,45 @@ Deltas Estimator::solve(const Derivatives& derivatives, const Eigen::VectorXd& q
   auto diff = q - p_zero;
   double a_u, a_c, a_v;
   Vector2d b;
-  if (!derivatives.u) {
+  if (!derivatives.u)
+  {
     a_u = (*derivatives.v).dot(*derivatives.v);
     a_c = (*derivatives.v).dot(*derivatives.w);
     a_v = (*derivatives.w).dot(*derivatives.w);
     b << diff.dot(*derivatives.v), diff.dot(*derivatives.w);
-  } else if (!derivatives.v) {
+  }
+  else if (!derivatives.v)
+  {
     a_u = (*derivatives.u).dot(*derivatives.u);
     a_c = (*derivatives.u).dot(*derivatives.w);
     a_v = (*derivatives.w).dot(*derivatives.w);
     b << diff.dot(*derivatives.u), diff.dot(*derivatives.w);
-  } else {
+  }
+  else
+  {
     a_u = (*derivatives.u).dot(*derivatives.u);
     a_c = (*derivatives.u).dot(*derivatives.v);
     a_v = (*derivatives.v).dot(*derivatives.v);
     b << diff.dot(*derivatives.u), diff.dot(*derivatives.v);
   }
-  MatrixXd A(2,2);
+  MatrixXd A(2, 2);
   A << a_u, a_c, a_c, a_v;
   Vector2d x = A.colPivHouseholderQr().solve(b);
   Deltas d;
-  if (!derivatives.u) {
+  if (!derivatives.u)
+  {
     d.u = {};
     d.v = x(0);
     d.w = x(1);
-  } else if (!derivatives.v) {
+  }
+  else if (!derivatives.v)
+  {
     d.u = x(0);
     d.v = {};
     d.w = x(1);
-  } else {
+  }
+  else
+  {
     d.u = x(0);
     d.v = x(1);
     d.w = {};
@@ -292,35 +311,41 @@ Deltas Estimator::solve(const Derivatives& derivatives, const Eigen::VectorXd& q
  * @param diverged
  * @return Lambda
  */
-Lambda Estimator::update_parameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q, bool& diverged) const
+Lambda Estimator::update_parameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q,
+                                    bool& diverged) const
 {
   double m, n, delta_m, delta_n;
   std::function<Lambda(double, double)> lambda_t;
-  if (!deltas.u) {
+  if (!deltas.u)
+  {
     m = lambda(1);
     n = lambda(2);
     delta_m = *deltas.v;
     delta_n = *deltas.w;
     lambda_t = [](double m, double n) {
-      double residual = std::max(1 - m*m - n*n, 0.0);
+      double residual = std::max(1 - m * m - n * n, 0.0);
       return Eigen::Vector3d(std::pow(residual, 0.5), m, n).normalized();
     };
-  } else if (!deltas.v) {
+  }
+  else if (!deltas.v)
+  {
     m = lambda(0);
     n = lambda(2);
     delta_m = *deltas.u;
     delta_n = *deltas.w;
     lambda_t = [](double m, double n) {
-      double residual = std::max(1 - m*m - n*n, 0.0);
+      double residual = std::max(1 - m * m - n * n, 0.0);
       return Eigen::Vector3d(m, std::pow(residual, 0.5), n).normalized();
     };
-  } else {
+  }
+  else
+  {
     m = lambda(0);
     n = lambda(1);
     delta_m = *deltas.u;
     delta_n = *deltas.v;
     lambda_t = [](double m, double n) {
-      double residual = std::max(1 - m*m - n*n, 0.0);
+      double residual = std::max(1 - m * m - n * n, 0.0);
       return Eigen::Vector3d(m, n, std::pow(residual, 0.5)).normalized();
     };
   }
@@ -328,36 +353,43 @@ Lambda Estimator::update_parameters(const Lambda& lambda, const Deltas& deltas, 
   double prev_m = m;
   double prev_n = n;
   double total_dist = chassis_.displacement(q, chassis_.betas(lambda)).norm();
-  while (1) {
+  while (1)
+  {
     double m_i = m + delta_m;
     double n_i = n + delta_n;
     // if adding delta_m and delta_m has produced out of bounds values,
     // recursively multiply to ensure they remain within bounds
     double factor;
-    while ((factor = std::hypot(m_i, n_i)) > 1) {
+    while ((factor = std::hypot(m_i, n_i)) > 1)
+    {
       m_i /= factor;
       n_i /= factor;
     }
-    if (total_dist < chassis_.displacement(q, chassis_.betas(lambda_t(m_i, n_i))).norm()) {
+    if (total_dist < chassis_.displacement(q, chassis_.betas(lambda_t(m_i, n_i))).norm())
+    {
       // Diverging
       // backtrack by reducing the step size
       delta_m *= 0.5;
       delta_n *= 0.5;
 
       // set a minimum step size to avoid infinite recursion
-      if (std::hypot(delta_m, delta_n) < min_delta_line_search_) {
+      if (std::hypot(delta_m, delta_n) < min_delta_line_search_)
+      {
         // Return the previous estimate
         diverged = true;
         return lambda_t(prev_m, prev_n);
-      } else {
+      }
+      else
+      {
         prev_m = m_i;
         prev_n = n_i;
       }
-    } else {
+    }
+    else
+    {
       diverged = false;
       return lambda_t(m_i, n_i);
     }
-
   }
 }
 

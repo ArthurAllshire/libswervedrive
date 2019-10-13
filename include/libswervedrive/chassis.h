@@ -34,8 +34,8 @@ using Motion = std::vector<ModuleMotion>;
  */
 class Chassis
 {
-using MatrixXd = Eigen::MatrixXd;
-using VectorXd = Eigen::VectorXd;
+  using MatrixXd = Eigen::MatrixXd;
+  using VectorXd = Eigen::VectorXd;
 
 public:
   Chassis(VectorXd alpha, VectorXd l, VectorXd r);
