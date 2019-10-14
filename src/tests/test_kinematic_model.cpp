@@ -129,7 +129,7 @@ TEST_F(KinematicTest, TestReconfigureWheels)
 {
   // basic test - TODO expand for wrapping etc once we nail down
   // ranges etc to ensure it works with wrapping
-  kinematicmodel->state = RECONFIGURING;
+  chassis->state_ = Chassis::RECONFIGURING;
 
   // pi/8 chosen to avoid any wrapping issues (only pi/4 difference,
   // so under pi/2)

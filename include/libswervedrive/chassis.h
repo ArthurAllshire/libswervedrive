@@ -40,9 +40,14 @@ class Chassis
 public:
   Chassis(VectorXd alpha, VectorXd l, VectorXd r);
   Chassis(VectorXd alpha, VectorXd l, VectorXd r, VectorXd b);
-  Chassis(Eigen::VectorXd alpha, Eigen::VectorXd l, Eigen::VectorXd b, Eigen::VectorXd r, Bounds beta_bounds,
-          Bounds beta_dot_bounds, Bounds beta_2dot_bounds, Bounds phi_dot_bounds, Bounds phi_2dot_bounds);
   ~Chassis() = default;
+
+  enum State
+  {
+    STOPPING,
+    RECONFIGURING,
+    RUNNING
+  };
 
   bool setBetaBounds(Bounds);
   bool setBetaDotBounds(Bounds);
@@ -94,6 +99,10 @@ public:
   Bounds phi_dot_bounds_;
   //! Min/max allowable value for the angular acceleration of the module wheels, in rad/s^2.
   Bounds phi_2dot_bounds_;
+
+  State state_;
+
+  Xi xi_;
 
 private:
   //! Threshold to prevent division by (nearly) zero

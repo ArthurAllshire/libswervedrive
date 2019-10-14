@@ -15,6 +15,8 @@ namespace swervedrive
  */
 Chassis::Chassis(VectorXd alpha, VectorXd l, VectorXd r, VectorXd b) : alpha_(alpha), l_vector_(l), r_(r), b_vector_(b)
 {
+  state_ = STOPPING;
+  xi_ = Xi::Zero(3);
   n_ = alpha.size();
   a_ = MatrixXd(3, n_);
   a_ << cos(alpha_.array()).transpose(), sin(alpha_.array()).transpose(), VectorXd::Zero(n_).transpose();

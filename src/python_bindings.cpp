@@ -20,12 +20,7 @@ PYBIND11_MODULE(pyswervedrive, m)
       .def(py::init<VectorXd,  // alpha
                     VectorXd,  // l
                     VectorXd,  // b
-                    VectorXd,  // r
-                    Bounds,    // beta_bounds
-                    Bounds,    // beta_dot_bounds
-                    Bounds,    // beta_2dot_bounds
-                    Bounds,    // phi_dot_bounds
-                    Bounds     // phi_2dot_bounds
+                    VectorXd   // r
                     >())
       .def("betas", &Chassis::betas)
       .def("__repr__", [](const Chassis& c) {

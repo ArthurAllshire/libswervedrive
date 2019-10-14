@@ -10,7 +10,6 @@ namespace swervedrive
  */
 KinematicModel::KinematicModel(const Chassis& chassis, double k_beta = 1) : k_beta(k_beta), chassis_(chassis)
 {
-  state = STOPPING;
 }
 
 /**
@@ -24,14 +23,14 @@ KinematicModel::KinematicModel(const Chassis& chassis, double k_beta = 1) : k_be
  * @param k_backtrack
  * @param k_lambda
  * @param k_mu
- * @return std::pair<Nu, Lambda>
+ * @return std::pair<Nu, Lambda> Nu_dot, lambda_2dot
  */
 std::pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, double mu_desired,
                                                            Lambda lamda_estimated, double mu_estimated,
                                                            double k_backtrack, double k_lambda, double k_mu)
 {
   // placeholder
-  std::pair<Nu, Lambda> ret;
+  std::pair<Nu, Lambda> ret;  // Nu_dot, lambda_2dot
   return ret;
 }
 
@@ -52,10 +51,10 @@ Motion KinematicModel::computeActuatorMotion(Lambda lambda, Lambda lambda_dot, L
   using namespace Eigen;
   using namespace swervedrive;
 
-  if (state == STOPPING && abs(mu) < 1e-3)
+  if (chassis_.state_ == Chassis::STOPPING && abs(mu) < 1e-3)
   {
     // stopped, so we can reconfigure
-    state = RECONFIGURING;
+    chassis_.state_ = Chassis::RECONFIGURING;
   }
 
   std::pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
@@ -120,7 +119,7 @@ Motion KinematicModel::reconfigureWheels(Eigen::VectorXd betas_desired, Eigen::V
   VectorXd beta_dot = k_beta * displacement;
   if (displacement.norm() < M_PI / 180 * chassis_.n_)
   {
-    state = RUNNING;
+    chassis_.state_ = Chassis::RUNNING;
   }
   Motion m;
   // TODO: investigate some sort of motion profiling / smoothing here?
@@ -144,7 +143,7 @@ Motion KinematicModel::reconfigureWheels(Eigen::VectorXd betas_desired, Eigen::V
  * @param dt time since estimate was last updated
  * @return Xi the updated twist position
  */
-Xi KinematicModel::computeOdometry(const Xi& xi, const Lambda& lambda, const double& mu, const double& dt)
+Xi KinematicModel::computeOdometry(const Lambda& lambda, const double& mu, const double& dt)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -152,11 +151,11 @@ Xi KinematicModel::computeOdometry(const Xi& xi, const Lambda& lambda, const dou
   // equation 2
   xi_dot << lambda(1), -lambda(0), lambda(2);
   xi_dot *= mu;
-  double theta = xi(2);
+  double theta = chassis_.xi_(2);
 
   MatrixXd m3(3, 3);
   m3 << cos(theta), -sin(theta), 0, sin(theta), cos(theta), 0, 0, 0, 1;
-  Xi xi_prime = xi + m3 * xi_dot * dt;  // equation 24
+  Xi xi_prime = chassis_.xi_ + m3 * xi_dot * dt;  // equation 24
   return xi_prime;
 }
 
