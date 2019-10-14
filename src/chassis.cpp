@@ -212,7 +212,7 @@ std::optional<int> Chassis::singularity(const Lambda& lambda) const
  * @param lambda the icr to map into the joint space and calculate the distance
  * @return double the norm between q and the point lambda maps to in the joint space.
  */
-double Chassis::lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const
+double Chassis::lambdaJointDist(const VectorXd& q, const Lambda& lambda) const
 {
   VectorXd q_lambda = betas(lambda);
   VectorXd distances = displacement(q, q_lambda);
@@ -225,7 +225,7 @@ double Chassis::lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const
  * @param lambda Lambda to calculate s_perp 1 and 2 based on.
  * @return std::pair<Eigen::MatrixXd, Eigen::MatrixXd> a pair of (s1, s2)
  */
-std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::s_perp(const Lambda& lambda)
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::sPerp(const Lambda& lambda)
 {
   auto beta = betas(lambda);
   RowVectorXd s = beta.array().sin().matrix().transpose();
@@ -242,7 +242,7 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::s_perp(const Lambda& lambda
   return std::pair(s1_lmda, s2_lmda);
 }
 
-Lambda Chassis::cartesian_to_lambda(double x, double y)
+Lambda Chassis::cartesianToLambda(double x, double y)
 {
   VectorXd plane(3);
   plane << x, y, 1;

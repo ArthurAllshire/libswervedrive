@@ -6,7 +6,7 @@ TimeScaler::TimeScaler(const Chassis& chassis) : chassis_(chassis)
 {
 }
 
-Motion TimeScaler::scale_motion(const Motion& motion, const ScalingParameters& scaling_parameters)
+Motion TimeScaler::scaleMotion(const Motion& motion, const ScalingParameters& scaling_parameters)
 {
   Motion scaled_motion;
   for (auto module_motion : motion)
@@ -22,7 +22,7 @@ Motion TimeScaler::scale_motion(const Motion& motion, const ScalingParameters& s
   return scaled_motion;
 }
 
-ScalingParameters TimeScaler::compute_scaling_parameters(const ScalingBounds& s_dot, const ScalingBounds& s_2dot)
+ScalingParameters TimeScaler::computeScalingParameters(const ScalingBounds& s_dot, const ScalingBounds& s_2dot)
 {
   ScalingParameters sp;
   sp.s_dot = s_dot.upper;
@@ -31,7 +31,7 @@ ScalingParameters TimeScaler::compute_scaling_parameters(const ScalingBounds& s_
   return sp;
 }
 
-std::pair<ScalingBounds, ScalingBounds> TimeScaler::compute_scaling_bounds(const Motion& motion)
+std::pair<ScalingBounds, ScalingBounds> TimeScaler::computeScalingBounds(const Motion& motion)
 {
   ScalingBounds s_dot, s_2dot;
   s_dot.lower = s_2dot.lower = 0;
@@ -40,14 +40,14 @@ std::pair<ScalingBounds, ScalingBounds> TimeScaler::compute_scaling_bounds(const
   int idx = 0;  // module index
   for (auto m : motion)
   {
-    auto bounds = s_dot_bounds(m, idx++);
+    auto bounds = sDotBounds(m, idx++);
     s_dot.lower = std::max(s_dot.lower, bounds.lower);
     s_dot.upper = std::min(s_dot.upper, bounds.upper);
   }
   idx = 0;
   for (auto m : motion)
   {
-    auto bounds = s_2dot_bounds(m, s_dot.upper, idx++);
+    auto bounds = s2DotBounds(m, s_dot.upper, idx++);
     s_2dot.lower = std::max(s_2dot.lower, bounds.lower);
     s_2dot.upper = std::min(s_2dot.upper, bounds.upper);
   }
@@ -55,7 +55,7 @@ std::pair<ScalingBounds, ScalingBounds> TimeScaler::compute_scaling_bounds(const
   return std::make_pair(s_dot, s_2dot);
 }
 
-ScalingBounds TimeScaler::s_dot_bounds(const ModuleMotion& motion, int module)
+ScalingBounds TimeScaler::sDotBounds(const ModuleMotion& motion, int module)
 {
   ScalingBounds sb;
 
@@ -108,7 +108,7 @@ ScalingBounds TimeScaler::s_dot_bounds(const ModuleMotion& motion, int module)
   return sb;
 }
 
-ScalingBounds TimeScaler::s_2dot_bounds(const ModuleMotion& motion, double s_dot, int module)
+ScalingBounds TimeScaler::s2DotBounds(const ModuleMotion& motion, double s_dot, int module)
 {
   ScalingBounds sb;
   // Check if we are already in bounds

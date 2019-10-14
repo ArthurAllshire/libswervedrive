@@ -79,16 +79,16 @@ TEST_F(ChassisTest, CalculatesLambdaJointDist)
   VectorXd q_deltas(4);
   q_deltas << 0.1, -0.1, -0.1, 0.1;
 
-  double dist_calc = chassis->lambda_joint_dist(q_lambda + q_deltas, lambda);
+  double dist_calc = chassis->lambdaJointDist(q_lambda + q_deltas, lambda);
   EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
 
   lambda = Lambda(0, 1, 0);  // straight forward
   q_lambda << M_PI / 2, 0, M_PI / 2, 0;
-  dist_calc = chassis->lambda_joint_dist(q_lambda, lambda);
+  dist_calc = chassis->lambdaJointDist(q_lambda, lambda);
   EXPECT_NEAR(dist_calc, 0, 1e-8);
 
   // now test with error
-  dist_calc = chassis->lambda_joint_dist(q_lambda + q_deltas, lambda);
+  dist_calc = chassis->lambdaJointDist(q_lambda + q_deltas, lambda);
   EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
 }
 
@@ -97,7 +97,7 @@ TEST_F(ChassisTest, CalculatesSPerp)
   Lambda lambda;
   lambda << 0, 0, 1;
 
-  std::pair<MatrixXd, MatrixXd> s_perp = chassis->s_perp(lambda);
+  std::pair<MatrixXd, MatrixXd> s_perp = chassis->sPerp(lambda);
 
   MatrixXd expected_s1(3, chassis->n_);
   MatrixXd expected_s2(3, chassis->n_);
@@ -107,8 +107,8 @@ TEST_F(ChassisTest, CalculatesSPerp)
   EXPECT_TRUE(s_perp.second.isApprox(expected_s2, 1e-3)) << s_perp.second;
 
   // Test when ICR isn't in centre of robot!
-  lambda = chassis->cartesian_to_lambda(1, 1);
-  s_perp = chassis->s_perp(lambda);
+  lambda = chassis->cartesianToLambda(1, 1);
+  s_perp = chassis->sPerp(lambda);
 
   expected_s1 = MatrixXd(3, chassis->n_);
   expected_s2 = MatrixXd(3, chassis->n_);
@@ -120,7 +120,7 @@ TEST_F(ChassisTest, CalculatesSPerp)
 
 TEST_F(ChassisTest, ConvertsCartesianToLambda)
 {
-  auto lambda = chassis->cartesian_to_lambda(0, 0);
+  auto lambda = chassis->cartesianToLambda(0, 0);
   EXPECT_NEAR(lambda[0], 0.0, 1e-3);
   EXPECT_NEAR(lambda[1], 0.0, 1e-3);
   EXPECT_NEAR(lambda[2], 1.0, 1e-3);

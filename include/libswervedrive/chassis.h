@@ -51,12 +51,12 @@ public:
   bool setPhi2DotBounds(Bounds);
 
   VectorXd betas(const Lambda& lambda) const;
-  double lambda_joint_dist(const VectorXd& q, const Lambda& lambda) const;
+  double lambdaJointDist(const VectorXd& q, const Lambda& lambda) const;
   VectorXd displacement(const VectorXd& q1, const VectorXd& q2) const;
   std::optional<int> singularity(const Lambda& lambda) const;
-  std::pair<Eigen::MatrixXd, Eigen::MatrixXd> s_perp(const Lambda& lambda);
+  std::pair<Eigen::MatrixXd, Eigen::MatrixXd> sPerp(const Lambda& lambda);
 
-  Lambda cartesian_to_lambda(double x, double y);
+  Lambda cartesianToLambda(double x, double y);
 
   //! Number of wheels
   unsigned int n_;

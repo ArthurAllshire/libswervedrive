@@ -16,7 +16,7 @@ TEST_F(EstimatorTest, FindStartingPoints)
   VectorXd q(4);
   q << 0, 0, 0, 0;
 
-  auto starting_points = e.select_starting_points(q);
+  auto starting_points = e.selectStartingPoints(q);
   EXPECT_EQ(starting_points.size(), 4);  // Should be four intersections
   for (auto sp : starting_points)
   {
@@ -30,28 +30,28 @@ TEST_F(EstimatorTest, ComputeDerivatives)
   Derivatives d;
 
   Lambda lambda(0, 0, 1);
-  d = e.compute_derivatives(lambda);
+  d = e.computeDerivatives(lambda);
   // w should be parameterised
   EXPECT_FALSE(d.w);
 
   lambda << 0, 0, -1;
-  d = e.compute_derivatives(lambda);
+  d = e.computeDerivatives(lambda);
   // w should be parameterised
   EXPECT_FALSE(d.w);
 
   lambda << 0, 1, 0;
-  d = e.compute_derivatives(lambda);
+  d = e.computeDerivatives(lambda);
   // v should be parameterised
   EXPECT_FALSE(d.v);
 
   lambda << -1, 0, 0;
-  d = e.compute_derivatives(lambda);
+  d = e.computeDerivatives(lambda);
   // u should be parameterised
   EXPECT_FALSE(d.u);
 
   // test it handles a singularity - this time the one on the wheel 1m infront of robot
   lambda << Lambda(1, 0, 1).normalized();
-  d = e.compute_derivatives(lambda);
+  d = e.computeDerivatives(lambda);
   // null axis should be u (tied dot product with w, but first in order),
   // so don't check it
   VectorXd v_vec = d.v.value();
@@ -74,7 +74,7 @@ TEST_F(EstimatorTest, UpdateParameters)
   q << 0, 0, 0, 0;
 
   bool diverged;
-  e.update_parameters(lambda, deltas, q, diverged);
+  e.updateParameters(lambda, deltas, q, diverged);
 }
 
 TEST_F(EstimatorTest, Solve)
@@ -108,6 +108,7 @@ TEST_F(EstimatorTest, Estimate)
   Lambda lambda_estimate = e.estimate(q);
   EXPECT_TRUE(lambda_estimate.isApprox(lambda));
 
+  // Reversed wheels
   q << M_PI, M_PI, -M_PI, 0;
   lambda_estimate = e.estimate(q);
   EXPECT_TRUE(lambda_estimate.isApprox(lambda));

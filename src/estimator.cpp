@@ -43,16 +43,16 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
   using namespace std;
   using namespace swervedrive;
 
-  std::vector<Lambda> starting_points = select_starting_points(q);
+  std::vector<Lambda> starting_points = selectStartingPoints(q);
   Lambda closest_lambda = starting_points[0];
   double closest_dist = 1e99;
 
   for (auto lambda_start : starting_points)
   {
     Lambda lambda = lambda_start;
-    double total_displacement = chassis_.lambda_joint_dist(q, lambda_start);
+    double total_displacement = chassis_.lambdaJointDist(q, lambda_start);
 
-    if (chassis_.lambda_joint_dist(q, lambda) < eta_delta_)
+    if (chassis_.lambdaJointDist(q, lambda) < eta_delta_)
     {
       return lambda;
     }
@@ -60,15 +60,15 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
     {
       for (int i = 0; i < max_iter_lambda_; ++i)
       {
-        Derivatives d = compute_derivatives(lambda);
+        Derivatives d = computeDerivatives(lambda);
         Deltas deltas = solve(d, q, lambda);
         bool diverging;
-        Lambda lambda_t = update_parameters(lambda, deltas, q, diverging);
+        Lambda lambda_t = updateParameters(lambda, deltas, q, diverging);
 
         // optional<int> singularity = chassis_.singularity(lambda_t);
         // TODO use the singularity calc
 
-        double proposed_distance = chassis_.lambda_joint_dist(q, lambda);
+        double proposed_distance = chassis_.lambdaJointDist(q, lambda);
         if (proposed_distance > total_displacement)
         {
           break;
@@ -97,7 +97,7 @@ Lambda Estimator::estimate(const Eigen::VectorXd& q) const
  * @return Derivatives (u, v, w), the vectors containing the derivatives of each steering angle
  *     with respect to u, v, and w respectively.
  */
-Derivatives Estimator::compute_derivatives(const Lambda& lambda) const
+Derivatives Estimator::computeDerivatives(const Lambda& lambda) const
 {
   using namespace Eigen;
   using namespace std;
@@ -192,7 +192,7 @@ Derivatives Estimator::compute_derivatives(const Lambda& lambda) const
   @returns List of the top three starting points ordered according to
   their distance to the input length.
  */
-std::vector<Lambda> Estimator::select_starting_points(const Eigen::VectorXd& q) const
+std::vector<Lambda> Estimator::selectStartingPoints(const Eigen::VectorXd& q) const
 {
   using namespace Eigen;
   using namespace std;
@@ -311,8 +311,8 @@ Deltas Estimator::solve(const Derivatives& derivatives, const Eigen::VectorXd& q
  * @param diverged
  * @return Lambda
  */
-Lambda Estimator::update_parameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q,
-                                    bool& diverged) const
+Lambda Estimator::updateParameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q,
+                                   bool& diverged) const
 {
   double m, n, delta_m, delta_n;
   std::function<Lambda(double, double)> lambda_t;

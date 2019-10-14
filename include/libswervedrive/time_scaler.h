@@ -26,11 +26,11 @@ public:
   TimeScaler(const Chassis&);
   ~TimeScaler() = default;
 
-  Motion scale_motion(const Motion&, const ScalingParameters&);
-  ScalingParameters compute_scaling_parameters(const ScalingBounds& s_dot, const ScalingBounds& s2_dot);
-  std::pair<ScalingBounds, ScalingBounds> compute_scaling_bounds(const Motion&);
-  ScalingBounds s_dot_bounds(const ModuleMotion&, int module_number);
-  ScalingBounds s_2dot_bounds(const ModuleMotion&, double s_dot, int module_number);
+  Motion scaleMotion(const Motion&, const ScalingParameters&);
+  ScalingParameters computeScalingParameters(const ScalingBounds& s_dot, const ScalingBounds& s2_dot);
+  std::pair<ScalingBounds, ScalingBounds> computeScalingBounds(const Motion&);
+  ScalingBounds sDotBounds(const ModuleMotion&, int module_number);
+  ScalingBounds s2DotBounds(const ModuleMotion&, double s_dot, int module_number);
 
 private:
   Chassis chassis_;

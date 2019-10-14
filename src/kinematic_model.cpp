@@ -26,25 +26,13 @@ KinematicModel::KinematicModel(const Chassis& chassis, double k_beta = 1) : k_be
  * @param k_mu
  * @return std::pair<Nu, Lambda>
  */
-std::pair<Nu, Lambda> KinematicModel::compute_chassis_motion(Lambda lambda_desired, double mu_desired,
-                                                             Lambda lamda_estimated, double mu_estimated,
-                                                             double k_backtrack, double k_lambda, double k_mu)
+std::pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, double mu_desired,
+                                                           Lambda lamda_estimated, double mu_estimated,
+                                                           double k_backtrack, double k_lambda, double k_mu)
 {
   // placeholder
   std::pair<Nu, Lambda> ret;
   return ret;
-}
-
-/**
- * @brief
- *
- * @param phi_dot
- * @return double
- */
-double KinematicModel::compute_mu(Lambda, double phi_dot)
-{
-  // placeholder
-  return 0.0;
 }
 
 /**
@@ -58,8 +46,8 @@ double KinematicModel::compute_mu(Lambda, double phi_dot)
  * @param betas
  * @return Motion
  */
-Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot, double mu,
-                                               double mu_dot)
+Motion KinematicModel::computeActuatorMotion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot, double mu,
+                                             double mu_dot)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -70,7 +58,7 @@ Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot,
     state = RECONFIGURING;
   }
 
-  std::pair<MatrixXd, MatrixXd> s_perp = chassis_.s_perp(lambda);
+  std::pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
 
   VectorXd denom = s_perp.second.transpose() * lambda;
   // don't divide by 0!
@@ -124,7 +112,7 @@ Motion KinematicModel::compute_actuator_motion(Lambda lambda, Lambda lambda_dot,
  * @param betas_estimated
  * @return Motion
  */
-Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated)
+Motion KinematicModel::reconfigureWheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -156,7 +144,7 @@ Motion KinematicModel::reconfigure_wheels(Eigen::VectorXd betas_desired, Eigen::
  * @param dt time since estimate was last updated
  * @return Xi the updated twist position
  */
-Xi KinematicModel::compute_odometry(const Xi& xi, const Lambda& lambda, const double& mu, const double& dt)
+Xi KinematicModel::computeOdometry(const Xi& xi, const Lambda& lambda, const double& mu, const double& dt)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -179,7 +167,7 @@ Xi KinematicModel::compute_odometry(const Xi& xi, const Lambda& lambda, const do
  * @param phi_dot angular velocities of the wheels.
  * @return double the estimate of mu.
  */
-double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
+double KinematicModel::estimateMu(Lambda lambda, Eigen::VectorXd phi_dot)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -188,7 +176,7 @@ double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
   MatrixXd b_on_r_block(chassis_.n_, 3);
   b_on_r_block << b_on_r, b_on_r, b_on_r;
 
-  std::pair<MatrixXd, MatrixXd> s_perp = chassis_.s_perp(lambda);
+  std::pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
   VectorXd s2d = s_perp.second.transpose() * lambda;
   MatrixXd s2d_block(chassis_.n_, 3);
   s2d_block << s2d, s2d, s2d;
@@ -216,7 +204,7 @@ double KinematicModel::estimate_mu(Lambda lambda, Eigen::VectorXd phi_dot)
           # this requires solving equation (22) from the control paper, i think
           # we may need to look into whether this is valid for a system with no
           # wheel coupling
-          s1_lmda, s2_lmda = self.s_perp(lmda_e)
+          s1_lmda, s2_lmda = self.sPerp(lmda_e)
           C = np.multiply(1.0 / s2_lmda.T.dot(lmda_e), s1_lmda.T)
           D = (s2_lmda - self.b_vector).T.dot(lmda_e) / self.r
           # Build the matrix
