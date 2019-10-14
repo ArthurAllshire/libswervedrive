@@ -63,39 +63,37 @@ TEST_F(ChassisTest, CalculatesDisplacement)
   q2 << M_PI, M_PI, -M_PI, -M_PI;
   expected << 0, 0, 0, 0;
   auto disp = chassis->displacement(q1, q2);
-  EXPECT_TRUE((expected-disp).isMuchSmallerThan(1.-4)) << expected << "\n" << disp;
+  EXPECT_TRUE((expected - disp).isMuchSmallerThan(1. - 4)) << expected << "\n" << disp;
 
   q1 << 0, -M_PI, 0, M_PI;
-  q2 << M_PI*3./2., M_PI*3./2., -M_PI*3./2., -M_PI*3./2.;
-  expected << M_PI/2., M_PI/2., -M_PI/2., -M_PI/2.;
+  q2 << M_PI * 3. / 2., M_PI * 3. / 2., -M_PI * 3. / 2., -M_PI * 3. / 2.;
+  expected << M_PI / 2., M_PI / 2., -M_PI / 2., -M_PI / 2.;
   disp = chassis->displacement(q1, q2);
   EXPECT_TRUE(expected.isApprox(disp)) << expected << "\n" << disp;
 }
 
 TEST_F(ChassisTest, CalculatesLambdaJointDist)
 {
-
-  Lambda lambda(0, 0, 1); // spot turn
+  Lambda lambda(0, 0, 1);  // spot turn
   VectorXd q_lambda = VectorXd::Zero(4);
   VectorXd q_deltas(4);
   q_deltas << 0.1, -0.1, -0.1, 0.1;
 
-  double dist_calc = chassis->lambda_joint_dist(q_lambda+q_deltas, lambda);
+  double dist_calc = chassis->lambda_joint_dist(q_lambda + q_deltas, lambda);
   EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
 
-  lambda = Lambda(0, 1, 0); // straight forward
-  q_lambda << M_PI/2, 0, M_PI/2, 0;
+  lambda = Lambda(0, 1, 0);  // straight forward
+  q_lambda << M_PI / 2, 0, M_PI / 2, 0;
   dist_calc = chassis->lambda_joint_dist(q_lambda, lambda);
   EXPECT_NEAR(dist_calc, 0, 1e-8);
 
   // now test with error
-  dist_calc = chassis->lambda_joint_dist(q_lambda+q_deltas, lambda);
+  dist_calc = chassis->lambda_joint_dist(q_lambda + q_deltas, lambda);
   EXPECT_NEAR(dist_calc, q_deltas.norm(), 1e-8);
-
-
 }
 
-TEST_F(ChassisTest, CalculatesSPerp) {
+TEST_F(ChassisTest, CalculatesSPerp)
+{
   Lambda lambda;
   lambda << 0, 0, 1;
 
@@ -103,16 +101,21 @@ TEST_F(ChassisTest, CalculatesSPerp) {
 
   MatrixXd expected_s1(3, chassis->n_);
   MatrixXd expected_s2(3, chassis->n_);
-  expected_s1 <<  0,  1,  0, -1,
-                 -1,  0,  1,  0,
-                  0,  0,  0,  0;
-  expected_s2 <<  1,  0, -1,  0,
-                  0,  1,  0, -1,
-                 -1, -1, -1, -1;
-  EXPECT_TRUE(s_perp.first.isApprox(expected_s1))
-    << s_perp.first;
-  EXPECT_TRUE(s_perp.second.isApprox(expected_s2))
-    << s_perp.second;
+  expected_s1 << 0, 1, 0, -1, -1, 0, 1, 0, 0, 0, 0, 0;
+  expected_s2 << 1, 0, -1, 0, 0, 1, 0, -1, -1, -1, -1, -1;
+  EXPECT_TRUE(s_perp.first.isApprox(expected_s1, 1e-3)) << s_perp.first;
+  EXPECT_TRUE(s_perp.second.isApprox(expected_s2, 1e-3)) << s_perp.second;
+
+  // Test when ICR isn't in centre of robot!
+  lambda = chassis->cartesian_to_lambda(1, 1);
+  s_perp = chassis->s_perp(lambda);
+
+  expected_s1 = MatrixXd(3, chassis->n_);
+  expected_s2 = MatrixXd(3, chassis->n_);
+  expected_s1 << 1, 0, -0.447, -0.894, 0, 1, 0.894, 0.447, -1, -1, -0.447, 0.447;
+  expected_s2 << 0, -1, -0.894, -0.447, 1, 0, -0.447, -0.894, 0, 0, -0.894, -0.894;
+  EXPECT_TRUE(s_perp.first.isApprox(expected_s1, 1e-3)) << s_perp.first;
+  EXPECT_TRUE(s_perp.second.isApprox(expected_s2, 1e-3)) << s_perp.second;
 }
 
 TEST_F(ChassisTest, ConvertsCartesianToLambda)
