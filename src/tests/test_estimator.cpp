@@ -29,22 +29,22 @@ TEST_F(EstimatorTest, ComputeDerivatives)
   Estimator e(*chassis);
   Derivatives d;
 
-  Lambda lambda(0,0,1);
+  Lambda lambda(0, 0, 1);
   d = e.compute_derivatives(lambda);
   // w should be parameterised
   EXPECT_FALSE(d.w);
 
-  lambda << 0,0,-1;
+  lambda << 0, 0, -1;
   d = e.compute_derivatives(lambda);
   // w should be parameterised
   EXPECT_FALSE(d.w);
 
-  lambda << 0,1,0;
+  lambda << 0, 1, 0;
   d = e.compute_derivatives(lambda);
   // v should be parameterised
   EXPECT_FALSE(d.v);
 
-  lambda << -1,0,0;
+  lambda << -1, 0, 0;
   d = e.compute_derivatives(lambda);
   // u should be parameterised
   EXPECT_FALSE(d.u);
@@ -69,9 +69,9 @@ TEST_F(EstimatorTest, UpdateParameters)
   deltas.v = -0.5;
   deltas.w = {};
 
-  Lambda lambda(0,0,1);
+  Lambda lambda(0, 0, 1);
   VectorXd q(4);
-  q << 0,0,0,0;
+  q << 0, 0, 0, 0;
 
   bool diverged;
   e.update_parameters(lambda, deltas, q, diverged);
@@ -82,16 +82,16 @@ TEST_F(EstimatorTest, Solve)
   Estimator e(*chassis);
   Derivatives derivatives;
   auto u = VectorXd(4);
-  u << 1,2,3,4;
+  u << 1, 2, 3, 4;
   derivatives.u = u;
   auto v = VectorXd(4);
-  v << -1,-2,-3,-4;
+  v << -1, -2, -3, -4;
   derivatives.v = v;
   derivatives.w = {};
 
-  Lambda lambda(0,0,1);
+  Lambda lambda(0, 0, 1);
   VectorXd q(4);
-  q << 0,0,0,0;
+  q << 0, 0, 0, 0;
 
   e.solve(derivatives, q, lambda);
 }
@@ -99,12 +99,16 @@ TEST_F(EstimatorTest, Solve)
 TEST_F(EstimatorTest, Estimate)
 {
   Estimator e(*chassis);
-  
+
   // test spot turn
   Lambda lambda(0, 0, 1);
   auto q = VectorXd(4);
-  q << 0, 0, 0, 0;
 
+  q << 0, 0, 0, 0;
   Lambda lambda_estimate = e.estimate(q);
+  EXPECT_TRUE(lambda_estimate.isApprox(lambda));
+
+  q << M_PI, M_PI, -M_PI, 0;
+  lambda_estimate = e.estimate(q);
   EXPECT_TRUE(lambda_estimate.isApprox(lambda));
 }
