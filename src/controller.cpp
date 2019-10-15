@@ -31,13 +31,13 @@ void Controller::setTimeScaler(shared_ptr<TimeScaler> time_scaler)
   time_scaler_ = time_scaler;
 }
 
-void Controller::updateStates(VectorXd beta, VectorXd phi_dot)
+void Controller::updateStates(const VectorXd& beta, const VectorXd& phi_dot)
 {
   beta_ = beta;
   phi_dot_ = phi_dot;
 }
 
-void Controller::updateStates(vector<ModuleState> states)
+void Controller::updateStates(const vector<ModuleState>& states)
 {
   unsigned int count = 0;
   VectorXd beta(states.size()), phi_dot(states.size());
@@ -68,7 +68,7 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
   }
 
   Lambda lambda_estimated = estimator_->estimate(beta_);
-  double mu_estimated = kinematic_model_->estimateMu(phi_dot_, lambda_estimated);
+  double mu_estimated = kinematic_model_->estimateMu(lambda_estimated, phi_dot_);
   chassis_.xi_ = kinematic_model_->computeOdometry(lambda_estimated, mu_estimated, dt_);
 
   if (chassis_.state_ == Chassis::STOPPING)
@@ -105,6 +105,82 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
   auto scaling_params = time_scaler_->computeScalingParameters(s_dot, s_2dot);
   auto scaled_motion = time_scaler_->scaleMotion(motion, scaling_params);
   control = integrateMotion(scaled_motion);
+  return control;
+}
+
+vector<ModuleState> Controller::integrateMotion(const Motion& motion)
+{
+  vector<ModuleState> control;
+  auto b_on_r = chassis_.b_vector_.cwiseQuotient(chassis_.r_);
+  VectorXd beta_dot(chassis_.n_), beta_2dot(chassis_.n_), phi_dot(chassis_.n_), phi_2dot(chassis_.n_);
+  unsigned int idx = 0;
+  for (auto m : motion)
+  {
+    beta_dot(idx) = m.beta_dot;
+    beta_2dot(idx) = m.beta_2dot;
+    phi_dot(idx) = m.phi_dot;
+    phi_2dot(idx) = m.phi_2dot;
+    idx++;
+  }
+  VectorXd phi_dot_c =
+      (phi_dot - b_on_r.cwiseProduct(beta_dot)) + (phi_2dot - b_on_r.cwiseProduct(beta_2dot)) * dt_;  // 40b
+  // Check limits
+  double fd = 1.0;
+  for (auto i = 0; i < phi_dot_c.size(); i++)
+  {
+    double pdc = phi_dot_c(i);
+    auto bounds = chassis_.phi_dot_bounds_[i];
+    if (pdc * fd > bounds(1))
+    {
+      fd = bounds(1) / pdc;
+    }
+    if (pdc * fd < bounds(0))
+    {
+      fd = bounds(0) / pdc;
+    }
+  }
+  // Check rotation rate limits
+  VectorXd delta_beta_c = beta_dot * dt_ + 0.5 * beta_2dot * pow(dt_, 2);
+  for (auto i = 0; i < delta_beta_c.size(); i++)
+  {
+    double dbc = delta_beta_c(i);
+    auto bounds = chassis_.beta_dot_bounds_[i];
+    if (dbc * fd > bounds(1) * dt_)
+    {
+      fd = bounds(1) * dt_ / dbc;
+    }
+    if (dbc * fd < bounds(0) * dt_)
+    {
+      fd = bounds(0) * dt_ / dbc;
+    }
+  }
+  VectorXd beta_c = (beta_ + fd * delta_beta_c);  // 40a
+  phi_dot_c *= fd;                                // 42
+
+  // Check for wheel reconfig needed due to beta bounds
+  bool stopping = false;
+  for (auto i = 0; i < beta_c.size(); i++)
+  {
+    auto bounds = chassis_.beta_bounds_[i];
+    auto bc = beta_c(i);
+    if (bc < bounds(0) || bc > bounds(1))
+    {
+      stopping = true;
+    }
+  }
+  if (stopping)
+  {
+    beta_c = beta_;  // 43
+    phi_dot_c = phi_dot;
+    chassis_.state_ = Chassis::STOPPING;
+  }
+
+  for (auto i = 0; i < beta_c.size(); i++)
+  {
+    double bc = beta_c(i);
+    double pdc = phi_dot_c(i);
+    control.push_back(make_pair(bc, pdc));
+  }
   return control;
 }
 

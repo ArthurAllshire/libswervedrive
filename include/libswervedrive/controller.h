@@ -22,10 +22,10 @@ public:
   void setKinematicModel(std::shared_ptr<KinematicModel>);
   void setTimeScaler(std::shared_ptr<TimeScaler>);
 
-  void updateStates(Eigen::VectorXd beta, Eigen::VectorXd phi_dot);
-  void updateStates(std::vector<ModuleState> states);
+  void updateStates(const Eigen::VectorXd& beta, const Eigen::VectorXd& phi_dot);
+  void updateStates(const std::vector<ModuleState>& states);
   std::vector<ModuleState> controlStep(double x_dot, double y_dot, double theta_dot);
-  std::vector<ModuleState> integrateMotion(Motion motion);
+  std::vector<ModuleState> integrateMotion(const Motion& motion);
 
   double dt_ = 0.02;
 
