@@ -31,9 +31,8 @@ struct Deltas
 class Estimator
 {
 public:
-  Estimator(const Chassis& chassis, Xi init = Eigen::VectorXd::Zero(3, 1), double eta_lambda = 1e-4,
-            double eta_delta = 1e-2, double min_delta_line_search = 1e-2, double max_iter_lambda = 50,
-            double singularity_tolerance = 1e-3);
+  Estimator(Chassis& chassis, double eta_lambda = 1e-4, double eta_delta = 1e-2, double min_delta_line_search = 1e-2,
+            double max_iter_lambda = 50, double singularity_tolerance = 1e-3);
   ~Estimator() = default;
 
   Derivatives computeDerivatives(const Lambda& lambda) const;
@@ -47,8 +46,7 @@ public:
   Lambda updateParameters(const Lambda& lambda, const Deltas& deltas, const Eigen::VectorXd& q, bool& diverged) const;
 
 protected:
-  Chassis chassis_;
-  Xi xi_;
+  Chassis& chassis_;
 
   double eta_lambda_ = 1e-4;
   double eta_delta_ = 1e-2;

@@ -23,7 +23,7 @@ struct ScalingParameters
 class TimeScaler
 {
 public:
-  TimeScaler(const Chassis&);
+  TimeScaler(Chassis&);
   ~TimeScaler() = default;
 
   Motion scaleMotion(const Motion&, const ScalingParameters&);
@@ -33,7 +33,7 @@ public:
   ScalingBounds s2DotBounds(const ModuleMotion&, double s_dot, int module_number);
 
 private:
-  Chassis chassis_;
+  Chassis& chassis_;
 
   const double ignore_beta_threshold_ = 1e-2;
   const double ignore_phi_threshold_ = 1e-2;

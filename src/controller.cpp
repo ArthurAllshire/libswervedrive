@@ -7,7 +7,7 @@ using namespace std;
 
 namespace swervedrive
 {
-Controller::Controller(const Chassis& chassis) : chassis_(chassis)
+Controller::Controller(Chassis& chassis) : chassis_(chassis)
 {
   // Create sensible defaults for the private members
   // User can replace them if they need to change something
@@ -53,11 +53,17 @@ void Controller::updateStates(const vector<ModuleState>& states)
 vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double theta_dot)
 {
   vector<ModuleState> control;
+  Lambda lambda_estimated = estimator_->estimate(beta_);
   // Convert to lambda and mu
   // Eq (1)
   Lambda lambda_desired = { -y_dot, x_dot, theta_dot };
   double mu_desired = lambda_desired.norm();
   lambda_desired.normalize();
+  if (abs(mu_desired) < 1e-3)
+  {
+    // No motion commanded - set desired lambda to current estimate
+    lambda_desired = lambda_estimated;
+  }
 
   if (chassis_.state_ == Chassis::RECONFIGURING)
   {
@@ -67,7 +73,6 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
     return control;
   }
 
-  Lambda lambda_estimated = estimator_->estimate(beta_);
   double mu_estimated = kinematic_model_->estimateMu(lambda_estimated, phi_dot_);
   chassis_.xi_ = kinematic_model_->computeOdometry(lambda_estimated, mu_estimated, dt_);
 

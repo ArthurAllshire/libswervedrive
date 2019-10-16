@@ -8,7 +8,6 @@ namespace swervedrive
  * @brief Construct a new Estimator object
  *
  * @param chassis a \sa{Chassis} object specifying the configuration of the chassis to estimate
- * @param init Starting point [x, y, theta] of the chassis in the world frame. Defaults to zero.
  * @param eta_lambda threshold when we assume the algorithm has converged to the correct
  *     icr based on how much lambda has moved between sucessive iterations
  * @param eta_delta threshold below which a starting point for iterative icr iteration is
@@ -21,10 +20,9 @@ namespace swervedrive
  * @param singularity_tolerance how close a point must be to be considered to be
  *     'on a structural singularity'
  */
-Estimator::Estimator(const Chassis& chassis, Xi init, double eta_lambda, double eta_delta, double min_delta_line_search,
+Estimator::Estimator(Chassis& chassis, double eta_lambda, double eta_delta, double min_delta_line_search,
                      double max_iter_lambda, double singularity_tolerance)
   : chassis_(chassis)
-  , xi_(init)
   , eta_lambda_(eta_lambda)
   , eta_delta_(eta_delta)
   , min_delta_line_search_(min_delta_line_search)

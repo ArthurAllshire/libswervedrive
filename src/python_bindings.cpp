@@ -52,7 +52,7 @@ PYBIND11_MODULE(pyswervedrive, m)
       .export_values();
 
   py::class_<Controller>(m, "Controller")
-      .def(py::init<const Chassis&>(), py::arg("chassis"))
+      .def(py::init<Chassis&>(), py::arg("chassis"))
       .def("controlStep", &Controller::controlStep,
            "Return pairs of beta and phi_dot for desired x_dot, y_dot and theta_dot")
       .def("updateStates", py::overload_cast<const VectorXd&, const VectorXd&>(&Controller::updateStates),
@@ -61,9 +61,8 @@ PYBIND11_MODULE(pyswervedrive, m)
            "Update the observed beta and phi_dot states");
 
   py::class_<Estimator>(m, "Estimator")
-      .def(py::init<const Chassis&, Xi, double, double, double, double, double>(), py::arg("chassis"),
-           py::arg("Xi") = Eigen::VectorXd::Zero(3, 1), py::arg("eta_lambda") = 1e-4, py::arg("eta_delta") = 1e-2,
-           py::arg("min_delta_line_search") = 1e-2, py::arg("max_iter_lambda") = 50,
-           py::arg("singularity_tolerance") = 1e-3)
+      .def(py::init<Chassis&, double, double, double, double, double>(), py::arg("chassis"),
+           py::arg("eta_lambda") = 1e-4, py::arg("eta_delta") = 1e-2, py::arg("min_delta_line_search") = 1e-2,
+           py::arg("max_iter_lambda") = 50, py::arg("singularity_tolerance") = 1e-3)
       .def("estimate", &Estimator::estimate, "Estimate the current ICR given wheel steering angles");
 }

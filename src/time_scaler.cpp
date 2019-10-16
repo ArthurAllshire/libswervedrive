@@ -2,7 +2,7 @@
 
 namespace swervedrive
 {
-TimeScaler::TimeScaler(const Chassis& chassis) : chassis_(chassis)
+TimeScaler::TimeScaler(Chassis& chassis) : chassis_(chassis)
 {
 }
 
@@ -15,6 +15,7 @@ Motion TimeScaler::scaleMotion(const Motion& motion, const ScalingParameters& sc
     m.beta_dot = module_motion.beta_dot * scaling_parameters.s_dot;
     m.beta_2dot = module_motion.beta_2dot * std::pow(scaling_parameters.s_dot, 2) +
                   module_motion.beta_dot * scaling_parameters.s_2dot;
+    m.phi_dot = module_motion.phi_dot;  // phi_dot is not scaled
     m.phi_2dot = module_motion.phi_2dot * scaling_parameters.s_dot;
     scaled_motion.push_back(m);
   }

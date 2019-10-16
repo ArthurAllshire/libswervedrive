@@ -1,5 +1,8 @@
 #include "libswervedrive/kinematic_model.h"
 
+using std::make_pair;
+using std::pair;
+
 namespace swervedrive
 {
 /**
@@ -8,7 +11,7 @@ namespace swervedrive
  * @param chassis Chassis object containing the parameters for the KinematicModel to operate on.
  * @param k_beta The gain for wheel reconfiguration.
  */
-KinematicModel::KinematicModel(const Chassis& chassis, double k_beta = 1) : k_beta(k_beta), chassis_(chassis)
+KinematicModel::KinematicModel(Chassis& chassis, double k_beta = 1) : k_beta(k_beta), chassis_(chassis)
 {
 }
 
@@ -25,13 +28,16 @@ KinematicModel::KinematicModel(const Chassis& chassis, double k_beta = 1) : k_be
  * @param k_mu
  * @return std::pair<Nu, Lambda> Nu_dot, lambda_2dot
  */
-std::pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, double mu_desired,
-                                                           Lambda lamda_estimated, double mu_estimated,
-                                                           double k_backtrack, double k_lambda, double k_mu)
+pair<Nu, Lambda> KinematicModel::computeChassisMotion(const Lambda& lambda_desired, const double& mu_desired,
+                                                      const Lambda& lamda_estimated, const double& mu_estimated,
+                                                      const double& k_backtrack, const double& k_lambda,
+                                                      const double& k_mu)
 {
   // placeholder
-  std::pair<Nu, Lambda> ret;  // Nu_dot, lambda_2dot
-  return ret;
+  Nu nu_dot{ 0, 0, 0, 0 };
+  Lambda lambda_2dot{ 0, 0, 0 };
+
+  return make_pair(nu_dot, lambda_2dot);
 }
 
 /**
@@ -45,8 +51,8 @@ std::pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired
  * @param betas
  * @return Motion
  */
-Motion KinematicModel::computeActuatorMotion(Lambda lambda, Lambda lambda_dot, Lambda lambda_2dot, double mu,
-                                             double mu_dot)
+Motion KinematicModel::computeActuatorMotion(const Lambda& lambda, const Lambda& lambda_dot, const Lambda& lambda_2dot,
+                                             const double& mu, const double& mu_dot)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -57,7 +63,7 @@ Motion KinematicModel::computeActuatorMotion(Lambda lambda, Lambda lambda_dot, L
     chassis_.state_ = Chassis::RECONFIGURING;
   }
 
-  std::pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
+  pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
 
   VectorXd denom = s_perp.second.transpose() * lambda;
   // don't divide by 0!
@@ -111,7 +117,7 @@ Motion KinematicModel::computeActuatorMotion(Lambda lambda, Lambda lambda_dot, L
  * @param betas_estimated
  * @return Motion
  */
-Motion KinematicModel::reconfigureWheels(Eigen::VectorXd betas_desired, Eigen::VectorXd betas_estimated)
+Motion KinematicModel::reconfigureWheels(const Eigen::VectorXd& betas_desired, const Eigen::VectorXd& betas_estimated)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -166,7 +172,7 @@ Xi KinematicModel::computeOdometry(const Lambda& lambda, const double& mu, const
  * @param phi_dot angular velocities of the wheels.
  * @return double the estimate of mu.
  */
-double KinematicModel::estimateMu(Lambda lambda, Eigen::VectorXd phi_dot)
+double KinematicModel::estimateMu(const Lambda& lambda, const Eigen::VectorXd& phi_dot)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -175,7 +181,7 @@ double KinematicModel::estimateMu(Lambda lambda, Eigen::VectorXd phi_dot)
   MatrixXd b_on_r_block(chassis_.n_, 3);
   b_on_r_block << b_on_r, b_on_r, b_on_r;
 
-  std::pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
+  pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
   VectorXd s2d = s_perp.second.transpose() * lambda;
   MatrixXd s2d_block(chassis_.n_, 3);
   s2d_block << s2d, s2d, s2d;

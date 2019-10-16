@@ -15,7 +15,7 @@ using ModuleState = std::pair<double, double>;
 class Controller
 {
 public:
-  Controller(const Chassis&);
+  Controller(Chassis&);
   ~Controller() = default;
 
   void setEstimator(std::shared_ptr<Estimator>);
@@ -30,7 +30,7 @@ public:
   double dt_ = 0.02;
 
 private:
-  Chassis chassis_;
+  Chassis& chassis_;
   std::shared_ptr<Estimator> estimator_;
   std::shared_ptr<KinematicModel> kinematic_model_;
   std::shared_ptr<TimeScaler> time_scaler_;
