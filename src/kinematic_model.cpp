@@ -28,16 +28,72 @@ KinematicModel::KinematicModel(Chassis& chassis, double k_beta = 1) : k_beta(k_b
  * @param k_mu
  * @return std::pair<Nu, Lambda> Nu_dot, lambda_2dot
  */
-pair<Nu, Lambda> KinematicModel::computeChassisMotion(const Lambda& lambda_desired, const double& mu_desired,
-                                                      const Lambda& lamda_estimated, const double& mu_estimated,
+pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, double mu_desired,
+                                                      const Lambda& lambda_estimated, const double& mu_estimated,
                                                       const double& k_backtrack, const double& k_lambda,
                                                       const double& k_mu)
 {
-  // placeholder
-  Nu nu_dot{ 0, 0, 0, 0 };
-  Lambda lambda_2dot{ 0, 0, 0 };
+  using namespace std;
+  using namespace Eigen;
 
-  return make_pair(nu_dot, lambda_2dot);
+  // Because +lmda and -lmda are the same, we should choose the closest one
+  if (lambda_desired.dot(lambda_estimated) < 0)
+  {
+    lambda_desired = -lambda_desired;
+    mu_desired = -mu_desired;
+  }
+
+  // bound mu based on the ph_dot constraits
+  auto mu_limits = muLimits(lambda_estimated);
+  mu_desired = max(min(mu_desired, mu_limits.second), mu_limits.first);
+
+  // Check for lambda on singularity
+  for (auto s : chassis_.singularities_)
+  {
+    if (lambda_desired.transpose().dot(s) > 0.99)
+    {
+      lambda_desired = lambda_estimated;
+    }
+  }
+
+  auto dlambda =
+      k_backtrack * k_lambda * (lambda_desired - (lambda_estimated.transpose().dot(lambda_desired)) * lambda_estimated);
+
+  auto d2lambda = pow(k_backtrack, 2) * pow(k_lambda, 2) *
+                  ((lambda_estimated.transpose().dot(lambda_desired)) * lambda_desired - lambda_estimated);
+
+  auto dmu = k_backtrack * k_mu * (mu_desired - mu_estimated);
+
+  Nu nu_dot{ dlambda(0), dlambda(1), dlambda(2), dmu };
+
+  return make_pair(nu_dot, d2lambda);
+}
+
+pair<double, double> KinematicModel::muLimits(const Lambda& lambda)
+{
+  using namespace Eigen;
+  using namespace std;
+
+  VectorXd phi_dot_min(chassis_.n_), phi_dot_max(chassis_.n_);
+  for (unsigned int i = 0; i < chassis_.n_; i++)
+  {
+    phi_dot_min(i) = chassis_.phi_dot_bounds_[i](0);
+    phi_dot_max(i) = chassis_.phi_dot_bounds_[i](1);
+  }
+  // Use eq(25) to find mu limits
+  auto s_perp = chassis_.sPerp(lambda);
+  auto f_lambda = chassis_.r_.cwiseQuotient((s_perp.second - chassis_.b_).transpose() * lambda);
+
+  // Iterate through each wheel, because sometimes max phi_dot gives negative mu
+  auto mu_min_phi = f_lambda.cwiseProduct(phi_dot_min);
+  auto mu_max_phi = f_lambda.cwiseProduct(phi_dot_max);
+  double mu_min = -1e10, mu_max = 1e10;
+  for (unsigned int i = 0; i < chassis_.n_; i++)
+  {
+    mu_min = max(mu_min, min(mu_min_phi(i), mu_max_phi(i)));
+    mu_max = min(mu_max, max(mu_min_phi(i), mu_max_phi(i)));
+  }
+  return make_pair(mu_min, mu_max);
 }
 
 /**
@@ -123,7 +179,7 @@ Motion KinematicModel::reconfigureWheels(const Eigen::VectorXd& betas_desired, c
   using namespace swervedrive;
   VectorXd displacement = chassis_.displacement(betas_estimated, betas_desired);
   VectorXd beta_dot = k_beta * displacement;
-  if (displacement.norm() < M_PI / 180 * chassis_.n_)
+  if (displacement.norm() < 0.1 * M_PI / 180 * chassis_.n_)
   {
     chassis_.state_ = Chassis::RUNNING;
   }

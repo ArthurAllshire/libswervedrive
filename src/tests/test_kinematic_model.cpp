@@ -125,6 +125,27 @@ TEST_F(KinematicTest, TestEstimateMu)
                                          << lambda;
 }
 
+TEST_F(KinematicTest, TestCalculateMuLimits)
+{
+  Lambda lambda{ 0, 0, 1 };
+  auto limits = kinematicmodel->muLimits(lambda);
+  EXPECT_GT(limits.second, limits.first);
+  EXPECT_NEAR(limits.first, -5., 1e-2);
+  EXPECT_NEAR(limits.second, 5., 1e-2);
+
+  lambda = { 0, 1, 0 };  // Drive forward
+  limits = kinematicmodel->muLimits(lambda);
+  EXPECT_GT(limits.second, limits.first);
+  EXPECT_NEAR(limits.first, -5., 1e-2);
+  EXPECT_NEAR(limits.second, 5., 1e-2);
+
+  lambda = { 0, -1, 0 };  // Drive forward
+  limits = kinematicmodel->muLimits(lambda);
+  EXPECT_GT(limits.second, limits.first);
+  EXPECT_NEAR(limits.first, -5., 1e-2);
+  EXPECT_NEAR(limits.second, 5., 1e-2);
+}
+
 TEST_F(KinematicTest, TestReconfigureWheels)
 {
   // basic test - TODO expand for wrapping etc once we nail down

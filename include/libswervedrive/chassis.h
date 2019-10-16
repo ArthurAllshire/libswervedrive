@@ -7,6 +7,9 @@
 #include <optional>
 #include <utility>
 
+#include <iostream>
+// TODO Remove this!!
+
 namespace swervedrive
 {
 //! Velocity bounds
@@ -99,6 +102,8 @@ public:
   Bounds phi_dot_bounds_;
   //! Min/max allowable value for the angular acceleration of the module wheels, in rad/s^2.
   Bounds phi_2dot_bounds_;
+
+  std::vector<Lambda> singularities_;
 
   State state_;
 
