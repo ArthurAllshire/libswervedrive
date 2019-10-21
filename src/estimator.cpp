@@ -27,8 +27,9 @@ Estimator::Estimator(Chassis& chassis, double eta_lambda, double eta_delta, doub
   , eta_delta_(eta_delta)
   , min_delta_line_search_(min_delta_line_search)
   , max_iter_lambda_(max_iter_lambda)
-  , singularity_tolerance_(singularity_tolerance){};
-
+  , singularity_tolerance_(singularity_tolerance)
+{
+}
 /**
  * @brief
  *
@@ -116,18 +117,18 @@ Derivatives Estimator::computeDerivatives(const Lambda& lambda) const
   }
   else if (axis == 'v')
   {
-    dm << 1, -lambda(0) / lambda(0), 0;
-    dn << 0, -lambda(2) / lambda(0), 1;
+    dm << 1, -lambda(0) / lambda(1), 0;
+    dn << 0, -lambda(2) / lambda(1), 1;
   }
   else
   {
-    dm << 1, 0, -lambda(0) / lambda(0);
-    dn << 0, 1, -lambda(1) / lambda(0);
+    dm << 1, 0, -lambda(0) / lambda(2);
+    dn << 0, 1, -lambda(1) / lambda(2);
   }
 
   // we need to elementwise-multiply through broadcasting delta and omega
   // (which are both 1xn row vectors) by three-row matrices, so create
-  Eigen::MatrixXd delta_block(3, chassis_.n_);
+  /*Eigen::MatrixXd delta_block(3, chassis_.n_);
   Eigen::MatrixXd omega_block(3, chassis_.n_);
 
   auto diff = chassis_.a_ - chassis_.l_;
@@ -139,11 +140,11 @@ Derivatives Estimator::computeDerivatives(const Lambda& lambda) const
   // 3 x n
   MatrixXd gamma_top = (MatrixXd)omega_block.cwiseProduct(diff) + delta_block.cwiseProduct(chassis_.a_orth_);
   // 1 x n
-  RowVectorXd gamma_bottom =
-      (RowVectorXd)lambda.transpose() * (delta_block.cwiseProduct(diff) - omega_block.cwiseProduct(chassis_.a_orth_));
+  VectorXd gamma_bottom =
+      lambda.transpose() * (delta_block.cwiseProduct(diff) - omega_block.cwiseProduct(chassis_.a_orth_));
 
-  RowVectorXd S_m = (dm * gamma_top);
-  RowVectorXd S_n = (dn * gamma_top);
+  VectorXd S_m = (dm * gamma_top);
+  VectorXd S_n = (dn * gamma_top);
 
   auto singularity = chassis_.singularity(lambda);
   if (singularity)
@@ -156,7 +157,24 @@ Derivatives Estimator::computeDerivatives(const Lambda& lambda) const
 
   S_m = S_m.cwiseQuotient(gamma_bottom);
   S_n = S_n.cwiseQuotient(gamma_bottom);
-
+*/
+  VectorXd S_n(chassis_.n_), S_m(chassis_.n_);
+  auto singularity = chassis_.singularity(lambda);
+  for (auto i = 0; i < (int)chassis_.n_; i++)
+  {
+    if (singularity && *singularity == i)
+    {
+      S_m(i) = S_n(i) = 0;
+      continue;
+    }
+    VectorXd a = chassis_.a_.col(i);
+    VectorXd l = chassis_.l_.col(i);
+    VectorXd a_orth = chassis_.a_orth_.col(i);
+    VectorXd top = (a_orth.dot(lambda) * (a - l)) + ((a - l).dot(lambda) * a_orth);
+    double bottom = (((a - l).dot(lambda) * (a - l)) - (a_orth.dot(lambda) * a_orth)).dot(lambda);
+    S_m(i) = top.dot(dm) / bottom;
+    S_n(i) = top.dot(dn) / bottom;
+  }
   Derivatives derivatives;
   if (axis == 'u')
   {
@@ -189,7 +207,7 @@ Derivatives Estimator::computeDerivatives(const Lambda& lambda) const
   chassis frame origin.)
   @returns List of the top three starting points ordered according to
   their distance to the input length.
- */
+  */
 std::vector<Lambda> Estimator::selectStartingPoints(const Eigen::VectorXd& q) const
 {
   using namespace Eigen;
@@ -198,7 +216,7 @@ std::vector<Lambda> Estimator::selectStartingPoints(const Eigen::VectorXd& q) co
 
   auto angle_sum = q + chassis_.alpha_;
   auto d = MatrixXd(chassis_.n_, 3);
-  d << cos(angle_sum.array()), sin(angle_sum.array()), VectorXd(chassis_.n_);
+  d << cos(angle_sum.array()), sin(angle_sum.array()), VectorXd::Zero(chassis_.n_);
 
   vector<Vector3d> p;
   for (unsigned int idx = 0; idx < chassis_.n_; ++idx)
