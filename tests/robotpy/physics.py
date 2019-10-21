@@ -1,6 +1,8 @@
 from pyfrc.physics import drivetrains
 from pyfrc.physics.units import units
 
+import math
+
 class PhysicsEngine(object):
     def __init__(self, physics_controller):
         """
@@ -26,8 +28,14 @@ class PhysicsEngine(object):
         rr_drive = can[21]["value"]
         lf_drive = can[31]["value"]
         rf_drive = can[41]["value"]
+
+        # Scale the steering motor to simulate gearing
+        # Full throttle gives us about 1rev/s
+
         for idx in [12, 22, 32, 42]:
-            speed = int(4096 * 4 * can[idx]["value"] * tm_diff)
+            speed = math.ceil(4096 * 1 * can[idx]["value"] * tm_diff)
+            #print("speed: %f" % speed)
+            #print("motor: %f" % can[idx]["value"])
             can[idx]["quad_position"] += speed
             can[idx]["quad_velocity"] = speed
 
@@ -38,10 +46,13 @@ class PhysicsEngine(object):
 
         # Dimensions are all in feet
         m_to_ft = 3.28
-        vx, vy, vw = drivetrains.four_motor_swerve_drivetrain(
+        # The drivetrain model has weird axes. Remap them, and flip afterwards.
+        vy, vx, vw = drivetrains.four_motor_swerve_drivetrain(
             lr_drive, rr_drive, lf_drive, rf_drive,
             lr_angle, rr_angle, lf_angle, rf_angle,
             x_wheelbase = 1.0 * m_to_ft, y_wheelbase = 1.0 * m_to_ft,
             speed = 3.0 * m_to_ft
         )
-        self.physics_controller.vector_drive(vx, vy, vw, tm_diff)
+        vy = -vy
+        vw = -vw
+        self.physics_controller.vector_drive(-vy, vx, -vw, tm_diff)

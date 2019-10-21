@@ -43,7 +43,7 @@ class SwerveModule:
         # set closed loop gains in slot0, typically kF stays zero - see documentation */
         self.steer_motor.selectProfileSlot(self.kSlotIdx, self.kPIDLoopIdx)
         self.steer_motor.config_kF(0, 0, self.kTimeoutMs)
-        self.steer_motor.config_kP(0, 5, self.kTimeoutMs)
+        self.steer_motor.config_kP(0, 1, self.kTimeoutMs)
         self.steer_motor.config_kI(0, 0, self.kTimeoutMs)
         self.steer_motor.config_kD(0, 0, self.kTimeoutMs)
 
@@ -57,11 +57,20 @@ class SwerveModule:
     def bound(self, angle):
         return math.atan2(math.sin(angle), math.cos(angle))
 
+    def getBeta(self):
+        return self.angle2beta(self.getAngle())
+    def getAngle(self):
+        return (self.steer_motor.getQuadraturePosition()/4096*2*math.pi) % math.pi
+    def angle2beta(self, angle):
+        return angle-math.pi/2-self.config.alpha
+    def beta2angle(self, beta):
+        return beta+math.pi/2+self.config.alpha
+
     def execute(self):
         talon_speed = self.speed / 3.0
         # 4096 counts per revolution
         current_counts = self.steer_motor.getQuadraturePosition()
-        current_angle = current_counts / 4096.0 * 2.0 * math.pi
+        current_angle = self.getAngle()
         delta = self.bound(self.angle - current_angle)
         delta_flipped = self.bound(self.angle - current_angle + math.pi)
         if abs(delta) < abs(delta_flipped):
@@ -95,7 +104,6 @@ class SwerveChassis:
         self.icr_chassis = Chassis(alpha, l, r)
         self.controller = Controller(self.icr_chassis)
 
-
     def drive(self, vx, vy, vz):
         for module in self.modules:
             x = vx + vz * -math.sin(module.config.alpha) * module.config.l
@@ -112,11 +120,13 @@ class SwerveChassis:
     def execute(self):
         if self.vx is not None:
             # We're using the ICR controller
-            beta = np.array([(module.steer_motor.getQuadraturePosition()+1024)/4096*2*math.pi+module.config.alpha
-                for module in self.modules])
+            beta = np.array([module.getBeta() for module in self.modules])
             phi_dot = np.array([module.drive_motor.get() for module in self.modules])
             self.controller.updateStates(beta, phi_dot)
             controls = self.controller.controlStep(self.vx, self.vy, self.vz)
             for c, m in zip(controls, self.modules):
-                m.drive(c[1], c[0])
-
+                #print("Error: %f" % m.steer_motor.getClosedLoopError())
+                m.drive(-c[1]*m.config.r/3.0, m.beta2angle(c[0]))
+                # -ve phi-dot creates positive spot turn, so flip drive direction for sim
+                # assume top speed of 3m/s and scale speed to +/- 1
+            print("state:", self.icr_chassis.state)
