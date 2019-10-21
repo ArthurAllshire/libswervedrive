@@ -144,25 +144,9 @@ VectorXd Chassis::betas(const Lambda& lambda) const
 {
   auto y = a_orth_.transpose() * lambda;
   auto x = (a_ - l_).transpose() * lambda;
-  // the steering angles array to be returned
-  VectorXd betas(n_);
 
-  // Uncomment the line below to return values in the
-  // range [-pi, pi]
-  // Otherwise this will return [-pi/2, pi]
-  // betas = y.binaryExpr(x, [] (double y, double x) { return std::atan2(y,x);} ).matrix(); return betas;
-
-  for (unsigned int idx = 0; idx < n_; ++idx)
-  {
-    if (abs(x[idx]) < numerical_zero_thresh_)
-    {
-      betas[idx] = M_PI / 2;
-    }
-    else
-    {
-      betas[idx] = atan(y[idx] / x[idx]);
-    }
-  }
+  // This will return [-pi/2, pi]
+  VectorXd betas = y.binaryExpr(x, [](double y, double x) { return std::atan2(y, x); }).matrix();
   return betas;
 }
 

@@ -17,11 +17,11 @@ protected:
     VectorXd b = VectorXd::Constant(4, 0);        // No offset of wheels from axis
     VectorXd r = VectorXd::Constant(4, 0.5);      // D=1m -> theta rad rotation gives theta metres displacement
 
-    Vector2d beta_bounds_arr = {-10., 10.};
-    Vector2d phi_dot_bounds_arr = {-10., 10.};
-    Vector2d beta_dot_bounds_arr = {-1 , 1};
-    Vector2d beta_2dot_bounds_arr = {-1 , 1};
-    Vector2d phi_2dot_bounds_arr = {-1 , 1};
+    Vector2d beta_bounds_arr = { -10., 10. };
+    Vector2d phi_dot_bounds_arr = { -10., 10. };
+    Vector2d beta_dot_bounds_arr = { -1, 1 };
+    Vector2d beta_2dot_bounds_arr = { -1, 1 };
+    Vector2d phi_2dot_bounds_arr = { -1, 1 };
     Bounds beta_bounds = Bounds(4, beta_bounds_arr);
     Bounds beta_dot_bounds = Bounds(4, beta_dot_bounds_arr);
     Bounds beta_2dot_bounds = Bounds(4, beta_2dot_bounds_arr);
@@ -29,11 +29,11 @@ protected:
     Bounds phi_2dot_bounds = Bounds(4, phi_2dot_bounds_arr);
 
     chassis = new Chassis(alpha, l, r, b);
-    chassis -> setBetaBounds(beta_bounds);
-    chassis -> setBetaDotBounds(beta_dot_bounds);
-    chassis -> setBeta2DotBounds(beta_2dot_bounds);
-    chassis -> setPhiDotBounds(phi_dot_bounds);
-    chassis -> setPhi2DotBounds(phi_2dot_bounds);
+    chassis->setBetaBounds(beta_bounds);
+    chassis->setBetaDotBounds(beta_dot_bounds);
+    chassis->setBeta2DotBounds(beta_2dot_bounds);
+    chassis->setPhiDotBounds(phi_dot_bounds);
+    chassis->setPhi2DotBounds(phi_2dot_bounds);
   }
 
   virtual void TearDown() override
@@ -53,8 +53,7 @@ protected:
 
     ChassisTest::SetUp();
 
-    kinematicmodel = new KinematicModel(*chassis, 0.25);
-
+    kinematicmodel = new KinematicModel(*chassis);
   }
 
   void TearDown() override

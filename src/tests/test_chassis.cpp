@@ -27,18 +27,18 @@ TEST_F(ChassisTest, ConvertsLambdaToBetas)
 
   auto q = chassis->betas(lambda_spot_turn);
   EXPECT_EQ(q.size(), 4);
-  VectorXd expected = VectorXd::Zero(4);
+  VectorXd expected = VectorXd::Constant(4, M_PI);
   EXPECT_TRUE(q.isApprox(expected)) << "Expected: " << expected << "\nCalculated: " << q;
 
   // test an icr on a structural singularity
   Lambda lambda_singular = Lambda(1, 0, 1).normalized();
   q = chassis->betas(lambda_singular);
-  double expected_singular_wheel = M_PI / 2.0;
+  double expected_singular_wheel = 0;
   EXPECT_NEAR(expected_singular_wheel, q(0), 1e-8) << "Expected: " << expected_singular_wheel << "\nCalculated: " << q;
 
   Lambda drive_along_x = Lambda(0, 1, 0);
   q = chassis->betas(drive_along_x);
-  expected << M_PI / 2.0, 0, M_PI / 2.0, 0;
+  expected << M_PI / 2.0, 0, -M_PI / 2.0, -M_PI;
   EXPECT_TRUE(q.isApprox(expected)) << "Expected: " << expected << "\nCalculated: " << q;
 }
 
@@ -101,8 +101,8 @@ TEST_F(ChassisTest, CalculatesSPerp)
 
   MatrixXd expected_s1(3, chassis->n_);
   MatrixXd expected_s2(3, chassis->n_);
-  expected_s1 << 0, 1, 0, -1, -1, 0, 1, 0, 0, 0, 0, 0;
-  expected_s2 << 1, 0, -1, 0, 0, 1, 0, -1, -1, -1, -1, -1;
+  expected_s1 << 0, -1, 0, 1, 1, 0, -1, 0, 0, 0, 0, 0;
+  expected_s2 << -1, 0, 1, 0, 0, -1, 0, 1, 1, 1, 1, 1;
   EXPECT_TRUE(s_perp.first.isApprox(expected_s1, 1e-3)) << s_perp.first;
   EXPECT_TRUE(s_perp.second.isApprox(expected_s2, 1e-3)) << s_perp.second;
 
@@ -112,8 +112,8 @@ TEST_F(ChassisTest, CalculatesSPerp)
 
   expected_s1 = MatrixXd(3, chassis->n_);
   expected_s2 = MatrixXd(3, chassis->n_);
-  expected_s1 << 1, 0, -0.447, -0.894, 0, 1, 0.894, 0.447, -1, -1, -0.447, 0.447;
-  expected_s2 << 0, -1, -0.894, -0.447, 1, 0, -0.447, -0.894, 0, 0, -0.894, -0.894;
+  expected_s1 << 1, 0, 0.447, 0.894, 0, -1, -0.894, -0.447, -1, 1, 0.447, -0.447;
+  expected_s2 << 0, 1, 0.894, 0.447, 1, 0, 0.447, 0.894, 0, 0, 0.894, 0.894;
   EXPECT_TRUE(s_perp.first.isApprox(expected_s1, 1e-3)) << s_perp.first;
   EXPECT_TRUE(s_perp.second.isApprox(expected_s2, 1e-3)) << s_perp.second;
 }
