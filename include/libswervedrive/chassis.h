@@ -7,9 +7,6 @@
 #include <optional>
 #include <utility>
 
-#include <iostream>
-// TODO Remove this!!
-
 namespace swervedrive
 {
 //! Velocity bounds
