@@ -48,11 +48,11 @@ public:
 protected:
   Chassis& chassis_;
 
-  double eta_lambda_ = 1e-4;
-  double eta_delta_ = 1e-2;
-  double min_delta_line_search_ = 1e-2;
-  double max_iter_lambda_ = 50;
-  double singularity_tolerance_ = 1e-3;
+  const double eta_lambda_ = 1e-4;
+  const double eta_delta_ = 1e-2;
+  const double min_delta_line_search_ = 1e-2;
+  const double max_iter_lambda_ = 50;
+  const double singularity_tolerance_ = 1e-3;
 };
 }  // namespace swervedrive
 
