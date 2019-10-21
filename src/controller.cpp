@@ -12,7 +12,7 @@ Controller::Controller(Chassis& chassis) : chassis_(chassis)
   // Create sensible defaults for the private members
   // User can replace them if they need to change something
   estimator_ = make_shared<Estimator>(chassis);
-  kinematic_model_ = make_shared<KinematicModel>(chassis, 1.0);
+  kinematic_model_ = make_shared<KinematicModel>(chassis);
   time_scaler_ = make_shared<TimeScaler>(chassis);
 }
 
@@ -65,10 +65,17 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
     lambda_desired = lambda_estimated;
   }
 
+  // Because +lmda and -lmda are the same, we should choose the closest one
+  if (lambda_desired.dot(lambda_estimated) < 0)
+  {
+    lambda_desired = -lambda_desired;
+    mu_desired = -mu_desired;
+  }
+
   if (chassis_.state_ == Chassis::RECONFIGURING)
   {
     auto beta_desired = chassis_.betas(lambda_desired);
-    auto motion = kinematic_model_->reconfigureWheels(beta_desired, beta_);
+    auto motion = kinematic_model_->reconfigureWheels(beta_desired, beta_, 40.0);
     control = integrateMotion(motion);
     return control;
   }
@@ -82,33 +89,38 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
     lambda_desired = lambda_estimated;
   }
 
-  double k_b = 1;
+  double k_backtrack = 1;
+  double k_lambda = 4;
+  double k_mu = 40;
+
   bool backtrack = true;
   ScalingBounds s_dot, s_2dot;
   Motion motion;
   while (backtrack)
   {
     auto derivs = kinematic_model_->computeChassisMotion(lambda_desired, mu_desired, lambda_estimated, mu_estimated,
-                                                         k_b, 4.0, 4.0);
+                                                         k_backtrack, k_lambda, k_mu);
     Lambda lambda_dot = derivs.first.head(3);
     double mu_dot = derivs.first(3);
     Lambda lambda_2dot = derivs.second;
     motion = kinematic_model_->computeActuatorMotion(lambda_estimated, lambda_dot, lambda_2dot, mu_estimated, mu_dot);
+
     auto bounds = time_scaler_->computeScalingBounds(motion);
     s_dot = bounds.first;
     s_2dot = bounds.second;
-    if (s_dot.lower <= s_dot.upper && s_2dot.lower <= s_2dot.upper)
+    if (s_dot.lower < s_dot.upper && s_2dot.lower < s_2dot.upper)
     {
       backtrack = false;
     }
     else
     {
-      k_b /= 2;
+      k_backtrack /= 2;
     }
   }
 
   auto scaling_params = time_scaler_->computeScalingParameters(s_dot, s_2dot);
   auto scaled_motion = time_scaler_->scaleMotion(motion, scaling_params);
+
   control = integrateMotion(scaled_motion);
   return control;
 }
