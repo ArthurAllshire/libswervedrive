@@ -9,9 +9,8 @@ namespace swervedrive
  * @brief Construct a new Kinematic Model:: Kinematic Model object
  *
  * @param chassis Chassis object containing the parameters for the KinematicModel to operate on.
- * @param k_beta The gain for wheel reconfiguration.
  */
-KinematicModel::KinematicModel(Chassis& chassis, double k_beta = 1) : k_beta(k_beta), chassis_(chassis)
+KinematicModel::KinematicModel(Chassis& chassis) : chassis_(chassis)
 {
 }
 
@@ -36,13 +35,6 @@ pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, dou
   using namespace std;
   using namespace Eigen;
 
-  // Because +lmda and -lmda are the same, we should choose the closest one
-  if (lambda_desired.dot(lambda_estimated) < 0)
-  {
-    lambda_desired = -lambda_desired;
-    mu_desired = -mu_desired;
-  }
-
   // bound mu based on the ph_dot constraits
   auto mu_limits = muLimits(lambda_estimated);
   mu_desired = max(min(mu_desired, mu_limits.second), mu_limits.first);
@@ -57,7 +49,7 @@ pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, dou
   }
 
   auto dlambda =
-      k_backtrack * k_lambda * (lambda_desired - (lambda_estimated.transpose().dot(lambda_desired)) * lambda_estimated);
+      k_backtrack * k_lambda * (lambda_desired - (lambda_estimated.transpose().dot(lambda_desired) * lambda_estimated));
 
   auto d2lambda = pow(k_backtrack, 2) * pow(k_lambda, 2) *
                   ((lambda_estimated.transpose().dot(lambda_desired)) * lambda_desired - lambda_estimated);
@@ -171,15 +163,18 @@ Motion KinematicModel::computeActuatorMotion(const Lambda& lambda, const Lambda&
  *
  * @param betas_desired
  * @param betas_estimated
+ * @param k_beta The gain for wheel reconfiguration.
  * @return Motion
  */
-Motion KinematicModel::reconfigureWheels(const Eigen::VectorXd& betas_desired, const Eigen::VectorXd& betas_estimated)
+Motion KinematicModel::reconfigureWheels(const Eigen::VectorXd& betas_desired, const Eigen::VectorXd& betas_estimated,
+                                         const double& k_beta)
 {
   using namespace Eigen;
   using namespace swervedrive;
   VectorXd displacement = chassis_.displacement(betas_estimated, betas_desired);
+
   VectorXd beta_dot = k_beta * displacement;
-  if (displacement.norm() < 0.1 * M_PI / 180 * chassis_.n_)
+  if (displacement.norm() < 1.0 * M_PI / 180 * chassis_.n_)
   {
     chassis_.state_ = Chassis::RUNNING;
   }

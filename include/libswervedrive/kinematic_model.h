@@ -8,7 +8,7 @@ namespace swervedrive
 class KinematicModel
 {
 public:
-  KinematicModel(Chassis&, double k_beta);
+  KinematicModel(Chassis&);
   ~KinematicModel() = default;
 
   std::pair<Nu, Lambda> computeChassisMotion(Lambda lambda_desired, double mu_desired, const Lambda& lambda_estimated,
@@ -16,12 +16,12 @@ public:
                                              const double& k_lambda, const double& k_mu);
   Motion computeActuatorMotion(const Lambda& lambda, const Lambda& lambda_dot, const Lambda& lambda_2dot,
                                const double& mu, const double& mu_dot);
-  Motion reconfigureWheels(const Eigen::VectorXd& betas_desired, const Eigen::VectorXd& betas_estimated);
+  Motion reconfigureWheels(const Eigen::VectorXd& betas_desired, const Eigen::VectorXd& betas_estimated,
+                           const double& k_beta);
   Xi computeOdometry(const Lambda& lambda, const double& mu, const double& dt);
   double estimateMu(const Lambda& lambda, const Eigen::VectorXd& phi_dot);
   std::pair<double, double> muLimits(const Lambda& lambda);
 
-  double k_beta;
   Xi xi;
 
 private:

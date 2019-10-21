@@ -123,6 +123,15 @@ TEST_F(KinematicTest, TestEstimateMu)
   mu = kinematicmodel->estimateMu(lambda, phi_dot);
   EXPECT_TRUE(abs(mu - expected) < 1e-2) << "Calculated mu: " << mu << " Expected mu " << expected << "\nLambda:\n"
                                          << lambda;
+
+  lambda = Lambda(0, 1, 0);  // Straight forward +ve x
+  double x_dot = 1.0;        // m / s
+  phi_dot = VectorXd(4);
+  phi_dot << x_dot / chassis->r_[0], x_dot / chassis->r_[1], -x_dot / chassis->r_[2], -x_dot / chassis->r_[3];
+  expected = x_dot;
+  mu = kinematicmodel->estimateMu(lambda, phi_dot);
+  EXPECT_TRUE(abs(mu - expected) < 1e-2) << "Calculated mu: " << mu << " Expected mu " << expected << "\nLambda:\n"
+                                         << lambda;
 }
 
 TEST_F(KinematicTest, TestCalculateMuLimits)
@@ -159,10 +168,11 @@ TEST_F(KinematicTest, TestReconfigureWheels)
   VectorXd beta_e(4);
   beta_e << M_PI / 8, M_PI / 8, M_PI / 8, M_PI / 8;
 
-  Motion motion = kinematicmodel->reconfigureWheels(beta_d, beta_e);
+  double k_beta = 40;
+  Motion motion = kinematicmodel->reconfigureWheels(beta_d, beta_e, k_beta);
   for (unsigned int i = 0; i < motion.size(); ++i)
   {
-    double expected = (beta_d - beta_e)(i)*kinematicmodel->k_beta;
+    double expected = (beta_d - beta_e)(i)*k_beta;
     EXPECT_TRUE(abs(expected - motion[i].beta_dot) < 1e-8)
         << "Module " << i << " Expected " << expected << " Returned " << motion[i].beta_dot;
   }
