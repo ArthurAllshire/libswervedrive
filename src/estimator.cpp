@@ -170,8 +170,11 @@ Derivatives Estimator::computeDerivatives(const Lambda& lambda) const
     VectorXd a = chassis_.a_.col(i);
     VectorXd l = chassis_.l_.col(i);
     VectorXd a_orth = chassis_.a_orth_.col(i);
-    VectorXd top = (a_orth.dot(lambda) * (a - l)) + ((a - l).dot(lambda) * a_orth);
-    double bottom = (((a - l).dot(lambda) * (a - l)) - (a_orth.dot(lambda) * a_orth)).dot(lambda);
+    // NB the signs are change for the second term
+    // We think there is a mistake in the calculation of
+    // derivatives in the original paper
+    VectorXd top = -(a_orth.dot(lambda) * (a - l)) - ((a - l).dot(lambda) * a_orth);
+    double bottom = (((a - l).dot(lambda) * (a - l)) + (a_orth.dot(lambda) * a_orth)).dot(lambda);
     S_m(i) = top.dot(dm) / bottom;
     S_n(i) = top.dot(dn) / bottom;
   }

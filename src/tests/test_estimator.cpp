@@ -61,8 +61,8 @@ TEST_F(EstimatorTest, ComputeDerivatives)
   // check that the first wheel for v and w have zero derivative
   EXPECT_NEAR(v_vec(0), 0, 1e-8) << "v axis should be 0 for singularity";
   EXPECT_NEAR(w_vec(0), 0, 1e-8) << "w axis should be 0 for singularity";
-  EXPECT_NEAR((*d.v)(1), (*d.w)(3), 1e-2) << "dv: " << *d.v << std::endl << "dw: " << *d.w << std::endl;
-  EXPECT_NEAR((*d.w)(1), (*d.v)(3), 1e-2);
+  EXPECT_NEAR((*d.v)(1), (*d.v)(3), 1e-2) << "dv: " << *d.v << std::endl;
+  EXPECT_NEAR((*d.w)(1), (*d.w)(3), 1e-2) << "dw: " << *d.w << std::endl;
 }
 
 TEST_F(EstimatorTest, UpdateParameters)

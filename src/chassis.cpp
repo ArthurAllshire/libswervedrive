@@ -145,8 +145,20 @@ VectorXd Chassis::betas(const Lambda& lambda) const
   auto y = a_orth_.transpose() * lambda;
   auto x = (a_ - l_).transpose() * lambda;
 
-  // This will return [-pi/2, pi]
-  VectorXd betas = y.binaryExpr(x, [](double y, double x) { return std::atan2(y, x); }).matrix();
+  // This will return [-pi/2, pi/2]
+  VectorXd betas = y.binaryExpr(x, [](double y, double x) {
+                      double b = std::atan2(y, x);
+                      // Comment out below to return [-pi, pi]
+                      while (b > M_PI / 2)
+                      {
+                        b -= M_PI;
+                      }
+                      while (b <= -M_PI / 2)
+                      {
+                        b += M_PI;
+                      }
+                      return b;
+                    }).matrix();
   return betas;
 }
 
