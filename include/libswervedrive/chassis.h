@@ -107,8 +107,6 @@ public:
   Xi xi_;
 
 private:
-  //! Threshold to prevent division by (nearly) zero
-  const double numerical_zero_thresh_ = 1e-5;
 };
 
 }  // namespace swervedrive
