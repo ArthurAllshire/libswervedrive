@@ -111,9 +111,9 @@ Motion KinematicModel::computeActuatorMotion(const Lambda& lambda, const Lambda&
     chassis_.state_ = Chassis::RECONFIGURING;
   }
 
-  pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
+  auto [s_perp1, s_perp2] = chassis_.sPerp(lambda);
 
-  VectorXd denom = s_perp.second.transpose() * lambda;
+  VectorXd denom = s_perp2.transpose() * lambda;
   // don't divide by 0!
   denom = denom.unaryExpr([](double x) {
     if (abs(x) < 1e-20)
@@ -128,20 +128,19 @@ Motion KinematicModel::computeActuatorMotion(const Lambda& lambda, const Lambda&
   });
 
   // equation 15a
-  VectorXd beta_dot = -(s_perp.first.transpose() * lambda_dot).cwiseQuotient(denom);
+  VectorXd beta_dot = -(s_perp1.transpose() * lambda_dot).cwiseQuotient(denom);
 
   // equation 15b
   VectorXd beta_2dot =
-      -(2 * beta_dot.cwiseProduct(s_perp.second.transpose() * lambda_dot) + s_perp.first.transpose() * lambda_2dot)
+      -(2 * beta_dot.cwiseProduct(s_perp2.transpose() * lambda_dot) + s_perp1.transpose() * lambda_2dot)
            .cwiseQuotient(denom);
 
   // equation 15c
-  VectorXd phi_dot =
-      (mu * (s_perp.second - chassis_.b_).transpose() * lambda - chassis_.b_vector_.cwiseProduct(beta_dot))
-          .cwiseQuotient(chassis_.r_);
+  VectorXd phi_dot = (mu * (s_perp2 - chassis_.b_).transpose() * lambda - chassis_.b_vector_.cwiseProduct(beta_dot))
+                         .cwiseQuotient(chassis_.r_);
 
   // equation 15d
-  VectorXd phi_2dot = (((s_perp.second - chassis_.b_).transpose() * (mu * lambda_dot + mu_dot * lambda)) -
+  VectorXd phi_2dot = (((s_perp2 - chassis_.b_).transpose() * (mu * lambda_dot + mu_dot * lambda)) -
                        chassis_.b_vector_.cwiseProduct(beta_2dot))
                           .cwiseQuotient(chassis_.r_);
 
@@ -232,12 +231,12 @@ double KinematicModel::estimateMu(const Lambda& lambda, const Eigen::VectorXd& p
   MatrixXd b_on_r_block(chassis_.n_, 3);
   b_on_r_block << b_on_r, b_on_r, b_on_r;
 
-  pair<MatrixXd, MatrixXd> s_perp = chassis_.sPerp(lambda);
-  VectorXd s2d = s_perp.second.transpose() * lambda;
+  auto [s_perp1, s_perp2] = chassis_.sPerp(lambda);
+  VectorXd s2d = s_perp2.transpose() * lambda;
   MatrixXd s2d_block(chassis_.n_, 3);
   s2d_block << s2d, s2d, s2d;
-  MatrixXd C = s_perp.first.transpose().cwiseQuotient(s2d_block);
-  VectorXd D = ((s_perp.second - chassis_.b_).transpose() * lambda).cwiseQuotient(chassis_.r_);
+  MatrixXd C = s_perp1.transpose().cwiseQuotient(s2d_block);
+  VectorXd D = ((s_perp2 - chassis_.b_).transpose() * lambda).cwiseQuotient(chassis_.r_);
 
   // build the matrix (from equation 19 in the control paper)
   MatrixXd k_lambda(chassis_.n_ + 1, 4);
