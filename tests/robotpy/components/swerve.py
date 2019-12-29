@@ -123,17 +123,17 @@ class SwerveChassis:
             beta = np.array([module.getBeta() for module in self.modules])
             phi_dot = np.array([module.drive_motor.get() for module in self.modules])
             self.controller.updateStates(beta, phi_dot)
-            if True and self.icr_chassis.state != Chassis.State.Running:
-                controls = self.controller.controlStep(self.vx, self.vy, self.vz)
+            print("Command: vx %s vy %s vz %s" % (self.vx, self.vy, self.vz))
+            controls = self.controller.controlStep(self.vx, self.vy, self.vz)
+            print()
+            for c, m in zip(controls, self.modules):
+                print("speed: %f" % c[1])
+                print("beta: %f" % math.degrees(c[0]))
+                print("angle: %f" % math.degrees(m.beta2angle(c[0])))
+                print("alpha: %f" % math.degrees(m.config.alpha))
                 print()
-                for c, m in zip(controls, self.modules):
-                    print("speed: %f" % c[1])
-                    print("beta: %f" % math.degrees(c[0]))
-                    print("angle: %f" % math.degrees(m.beta2angle(c[0])))
-                    print("alpha: %f" % math.degrees(m.config.alpha))
-                    print()
-                    #print("Error: %f" % m.steer_motor.getClosedLoopError())
-                    m.drive(0*-c[1]*m.config.r/3.0, m.beta2angle(c[0]))
-                    # -ve phi-dot creates positive spot turn, so flip drive direction for sim
-                    # assume top speed of 3m/s and scale speed to +/- 1
-                print("state:", self.icr_chassis.state)
+                #print("Error: %f" % m.steer_motor.getClosedLoopError())
+                m.drive(-c[1]*m.config.r/3.0, m.beta2angle(c[0]))
+                # -ve phi-dot creates positive spot turn, so flip drive direction for sim
+                # assume top speed of 3m/s and scale speed to +/- 1
+            print("state:", self.icr_chassis.state)

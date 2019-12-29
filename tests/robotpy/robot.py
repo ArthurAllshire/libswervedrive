@@ -44,14 +44,13 @@ class SwerveTestRobot(magicbot.MagicRobot):
         vy = -self.joystick.getX() * 3.0
         vz = -self.joystick.getZ() * 0.5  # rad/s
 
-        vx = vy = vz = 0.0
-        import math
+        # vx = vy = vz = 0.0
         #vx = math.sin(self.t/100.0)
         #vy = math.cos(self.t/100.0)
         #vx = int(self.t/100.0) % 3 - 1
         #vy = int(self.t/100.0 + 1) % 3 - 1
-        self.t += 1
-        vz = 0.5
+        # self.t += 1
+        # vz = 0.5
         #self.chassis.drive(vx, vy, vz)
         self.chassis.icr_drive(vx, vy, vz)
 
