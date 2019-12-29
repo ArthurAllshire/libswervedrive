@@ -38,7 +38,7 @@ TEST_F(ChassisTest, ConvertsLambdaToBetas)
 
   Lambda drive_along_x = Lambda(0, 1, 0);
   q = chassis->betas(drive_along_x);
-  expected << M_PI / 2.0, 0, M_PI / 2.0, 0;
+  expected << M_PI / 2.0, 0, -M_PI / 2.0, 0;
   EXPECT_TRUE(q.isApprox(expected)) << "Expected: " << expected << "\nCalculated: " << q;
 }
 

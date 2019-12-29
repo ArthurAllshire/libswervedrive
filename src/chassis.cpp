@@ -149,7 +149,7 @@ VectorXd Chassis::betas(const Lambda& lambda) const
   VectorXd betas = y.binaryExpr(x, [](double y, double x) {
                       double b = std::atan2(y, x);
                       // Comment out below to return [-pi, pi]
-                      while (b > M_PI / 2)
+                      while (b >= M_PI / 2)
                       {
                         b -= M_PI;
                       }
