@@ -3,6 +3,7 @@
 
 #include "libswervedrive/chassis.h"
 #include "libswervedrive/kinematic_model.h"
+#include "libswervedrive/controller.h"
 
 class ChassisTest : public ::testing::Test
 {
@@ -63,6 +64,27 @@ protected:
   }
 
   swervedrive::KinematicModel* kinematicmodel;
+};
+
+class ControllerTest : public ChassisTest
+{
+protected:
+  void SetUp() override
+  {
+    using namespace swervedrive;
+
+    ChassisTest::SetUp();
+
+    controller = new Controller(*chassis);
+  }
+
+  void TearDown() override
+  {
+    ChassisTest::SetUp();
+    delete controller;
+  }
+
+  swervedrive::Controller* controller;
 };
 
 #endif
