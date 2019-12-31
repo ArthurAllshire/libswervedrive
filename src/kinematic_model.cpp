@@ -30,13 +30,13 @@ KinematicModel::KinematicModel(Chassis& chassis) : chassis_(chassis)
 pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, double mu_desired,
                                                       const Lambda& lambda_estimated, const double& mu_estimated,
                                                       const double& k_backtrack, const double& k_lambda,
-                                                      const double& k_mu, const Eigen::VectorXd& betas)
+                                                      const double& k_mu, const Eigen::VectorXd& beta)
 {
   using namespace std;
   using namespace Eigen;
 
   // bound mu based on the ph_dot constraits
-  auto mu_limits = muLimits(lambda_estimated, betas);
+  auto mu_limits = muLimits(lambda_estimated, beta);
   mu_desired = max(min(mu_desired, mu_limits.second), mu_limits.first);
 
   // Check for lambda on singularity
@@ -61,7 +61,7 @@ pair<Nu, Lambda> KinematicModel::computeChassisMotion(Lambda lambda_desired, dou
   return make_pair(nu_dot, d2lambda);
 }
 
-pair<double, double> KinematicModel::muLimits(const Lambda& lambda, const Eigen::VectorXd& betas)
+pair<double, double> KinematicModel::muLimits(const Lambda& lambda, const Eigen::VectorXd& beta)
 {
   using namespace Eigen;
   using namespace std;
@@ -73,7 +73,7 @@ pair<double, double> KinematicModel::muLimits(const Lambda& lambda, const Eigen:
     phi_dot_max(i) = chassis_.phi_dot_bounds_[i](1);
   }
   // Use eq(25) to find mu limits
-  auto s_perp = chassis_.sPerpPatch(lambda, betas);
+  auto s_perp = chassis_.sPerp(lambda, beta);
   auto f_lambda = chassis_.r_.cwiseQuotient((s_perp.second - chassis_.b_).transpose() * lambda);
 
   // Iterate through each wheel, because sometimes max phi_dot gives negative mu
@@ -96,11 +96,11 @@ pair<double, double> KinematicModel::muLimits(const Lambda& lambda, const Eigen:
  * @param lambda_2dot
  * @param mu
  * @param mu_dot
- * @param betas
+ * @param beta
  * @return Motion
  */
 Motion KinematicModel::computeActuatorMotion(const Lambda& lambda, const Lambda& lambda_dot, const Lambda& lambda_2dot,
-                                             const double& mu, const double& mu_dot, const Eigen::VectorXd& betas)
+                                             const double& mu, const double& mu_dot, const Eigen::VectorXd& beta)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -111,7 +111,7 @@ Motion KinematicModel::computeActuatorMotion(const Lambda& lambda, const Lambda&
     chassis_.state_ = Chassis::RECONFIGURING;
   }
 
-  auto [s_perp1, s_perp2] = chassis_.sPerpPatch(lambda, betas);
+  auto [s_perp1, s_perp2] = chassis_.sPerp(lambda, beta);
 
   VectorXd denom = s_perp2.transpose() * lambda;
   // don't divide by 0!
@@ -222,7 +222,7 @@ Xi KinematicModel::computeOdometry(const Lambda& lambda, const double& mu, const
  * @param phi_dot angular velocities of the wheels.
  * @return double the estimate of mu.
  */
-double KinematicModel::estimateMu(const Lambda& lambda, const Eigen::VectorXd& phi_dot, const Eigen::VectorXd& betas)
+double KinematicModel::estimateMu(const Lambda& lambda, const Eigen::VectorXd& phi_dot, const Eigen::VectorXd& beta)
 {
   using namespace Eigen;
   using namespace swervedrive;
@@ -231,7 +231,7 @@ double KinematicModel::estimateMu(const Lambda& lambda, const Eigen::VectorXd& p
   MatrixXd b_on_r_block(chassis_.n_, 3);
   b_on_r_block << b_on_r, b_on_r, b_on_r;
 
-  auto [s_perp1, s_perp2] = chassis_.sPerpPatch(lambda, betas);
+  auto [s_perp1, s_perp2] = chassis_.sPerp(lambda, beta);
   VectorXd s2d = s_perp2.transpose() * lambda;
   MatrixXd s2d_block(chassis_.n_, 3);
   s2d_block << s2d, s2d, s2d;

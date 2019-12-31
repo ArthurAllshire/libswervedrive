@@ -217,34 +217,18 @@ double Chassis::lambdaJointDist(const VectorXd& q, const Lambda& lambda) const
   return distances.norm();
 }
 
-/**
- * @brief Calculates the s_perp (1 and 2) value from the pappers.
- *
- * @param lambda Lambda to calculate s_perp 1 and 2 based on.
- * @return std::pair<Eigen::MatrixXd, Eigen::MatrixXd> a pair of (s1, s2)
- */
-std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::sPerp(const Lambda& lambda)
-{
-  auto beta = betas(lambda);
-  RowVectorXd s = beta.array().sin().matrix().transpose();
-  RowVectorXd c = beta.array().cos().matrix().transpose();
-  MatrixXd s_block(3, n_);
-  s_block << s, s, s;
-  MatrixXd c_block(3, n_);
-  c_block << c, c, c;
-
-  MatrixXd s1_lmda = ((a_ - l_).cwiseProduct(s_block) - a_orth_.cwiseProduct(c_block));
-
-  MatrixXd s2_lmda = ((a_ - l_).cwiseProduct(c_block) + a_orth_.cwiseProduct(s_block));
-
-  return std::pair(s1_lmda, s2_lmda);
-}
-
 double wrap(double angle) {
   return std::atan2(std::sin(angle), std::cos(angle));
 }
 
-std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::sPerpPatch(const Lambda& lambda, const VectorXd& current_betas)
+/**
+ * @brief Calculates the s_perp (1 and 2) value from the pappers.
+ *
+ * @param lambda Lambda to calculate s_perp 1 and 2 based on.
+ * @param current_betas The current beta angles, to ensure that the sin and cosine functions used have the correct signs
+ * @return std::pair<Eigen::MatrixXd, Eigen::MatrixXd> a pair of (s1, s2)
+ */
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::sPerp(const Lambda& lambda, const VectorXd& current_betas)
 {
   auto beta = betas(lambda);
   RowVectorXd s = beta.array().sin().matrix().transpose();

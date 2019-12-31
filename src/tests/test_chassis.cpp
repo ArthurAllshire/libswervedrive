@@ -96,8 +96,9 @@ TEST_F(ChassisTest, CalculatesSPerp)
 {
   Lambda lambda;
   lambda << 0, 0, 1;
+  auto beta = chassis->betas(lambda);
 
-  std::pair<MatrixXd, MatrixXd> s_perp = chassis->sPerp(lambda);
+  std::pair<MatrixXd, MatrixXd> s_perp = chassis->sPerp(lambda, beta);
 
   MatrixXd expected_s1(3, chassis->n_);
   MatrixXd expected_s2(3, chassis->n_);
@@ -108,7 +109,8 @@ TEST_F(ChassisTest, CalculatesSPerp)
 
   // Test when ICR isn't in centre of robot!
   lambda = chassis->cartesianToLambda(1, 1);
-  s_perp = chassis->sPerp(lambda);
+  beta = chassis->betas(lambda);
+  s_perp = chassis->sPerp(lambda, beta);
 
   expected_s1 = MatrixXd(3, chassis->n_);
   expected_s2 = MatrixXd(3, chassis->n_);
