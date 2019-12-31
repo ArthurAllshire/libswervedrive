@@ -149,7 +149,7 @@ VectorXd Chassis::betas(const Lambda& lambda) const
   VectorXd betas = y.binaryExpr(x, [](double y, double x) {
                       double b = std::atan2(y, x);
                       // Comment out below to return [-pi, pi]
-                      while (b >= M_PI / 2)
+                      while (b > M_PI / 2)
                       {
                         b -= M_PI;
                       }
@@ -228,6 +228,36 @@ std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::sPerp(const Lambda& lambda)
   auto beta = betas(lambda);
   RowVectorXd s = beta.array().sin().matrix().transpose();
   RowVectorXd c = beta.array().cos().matrix().transpose();
+  MatrixXd s_block(3, n_);
+  s_block << s, s, s;
+  MatrixXd c_block(3, n_);
+  c_block << c, c, c;
+
+  MatrixXd s1_lmda = ((a_ - l_).cwiseProduct(s_block) - a_orth_.cwiseProduct(c_block));
+
+  MatrixXd s2_lmda = ((a_ - l_).cwiseProduct(c_block) + a_orth_.cwiseProduct(s_block));
+
+  return std::pair(s1_lmda, s2_lmda);
+}
+
+double wrap(double angle) {
+  return std::atan2(std::sin(angle), std::cos(angle));
+}
+
+std::pair<Eigen::MatrixXd, Eigen::MatrixXd> Chassis::sPerpPatch(const Lambda& lambda, const VectorXd& current_betas)
+{
+  auto beta = betas(lambda);
+  RowVectorXd s = beta.array().sin().matrix().transpose();
+  RowVectorXd c = beta.array().cos().matrix().transpose();
+
+  for (int i = 0; i < n_; ++i) {
+    // wheel is reversed fom what the betas function thinks it "should" be, so multiply by -1
+    // to account for this
+    if (abs(wrap(beta(i) - current_betas(i))) > abs(wrap(beta(i) - current_betas(i) + M_PI))) {
+      s(i) *= -1;
+      c(i) *= -1;
+    }
+  }
   MatrixXd s_block(3, n_);
   s_block << s, s, s;
   MatrixXd c_block(3, n_);

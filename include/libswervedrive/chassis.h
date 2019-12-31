@@ -60,6 +60,7 @@ public:
   VectorXd displacement(const VectorXd& q1, const VectorXd& q2) const;
   std::optional<int> singularity(const Lambda& lambda) const;
   std::pair<Eigen::MatrixXd, Eigen::MatrixXd> sPerp(const Lambda& lambda);
+  std::pair<Eigen::MatrixXd, Eigen::MatrixXd> sPerpPatch(const Lambda& lambda, const VectorXd& current_betas);
 
   static Lambda cartesianToLambda(double x, double y);
 

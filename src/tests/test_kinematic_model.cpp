@@ -3,6 +3,8 @@
 #include "libswervedrive/chassis.h"
 #include "chassis_fixture.h"
 
+#include <numeric>
+
 using namespace Eigen;
 using namespace swervedrive;
 
@@ -16,8 +18,10 @@ TEST_F(KinematicTest, TestComputeActuatorMotion)
   lambda_2dot << 0, 0, -1;
   double mu = 1.0;
   double mu_dot = 1.0;
+  Eigen::VectorXd beta(4);
+  beta << 0., 0., 0., 0.;
 
-  Motion motion = kinematicmodel->computeActuatorMotion(lambda, lambda_dot, lambda_2dot, mu, mu_dot);
+  Motion motion = kinematicmodel->computeActuatorMotion(lambda, lambda_dot, lambda_2dot, mu, mu_dot, beta);
 
   /*
   We do the calculations by hand to check that this is correct
@@ -74,10 +78,11 @@ TEST_F(KinematicTest, TestComputesActuatorMotionReverse)
   lambda_2dot << 0, 0, -51.98706951;
   double mu = 126.4;
   double mu_dot = 1.0;
+  auto beta = chassis->betas(lambda);
 
-  Motion motion = kinematicmodel->computeActuatorMotion(lambda, lambda_dot, lambda_2dot, mu, mu_dot);
+  Motion motion = kinematicmodel->computeActuatorMotion(lambda, lambda_dot, lambda_2dot, mu, mu_dot, beta);
 
-  Motion motion_neg = kinematicmodel->computeActuatorMotion(-lambda, -lambda_dot, -lambda_2dot, -mu, -mu_dot);
+  Motion motion_neg = kinematicmodel->computeActuatorMotion(-lambda, -lambda_dot, -lambda_2dot, -mu, -mu_dot, beta);
 
   double tol = 1e-8;
   for (uint i = 0; i < motion.size(); ++i)
@@ -93,11 +98,13 @@ TEST_F(KinematicTest, TestEstimateMu)
   Lambda lambda = chassis->cartesianToLambda(0, 0);
   double theta_dot = 1.0;  // rad / s
   VectorXd phi_dot(4);
+  VectorXd beta(4);
   phi_dot << -theta_dot / chassis->r_[0], -theta_dot / chassis->r_[1], -theta_dot / chassis->r_[2],
       -theta_dot / chassis->r_[3];
+  beta << 0, 0, 0, 0;
   // theta_dot = mu * w  Controller paper eq(2)
   double expected = theta_dot / lambda[2];
-  double mu = kinematicmodel->estimateMu(lambda, phi_dot);
+  double mu = kinematicmodel->estimateMu(lambda, phi_dot, beta);
   EXPECT_TRUE(abs(mu - expected) < 1e-2) << "Calculated mu: " << mu << " Expected mu " << expected << "chassis r"
                                          << chassis->r_(0) << "\nLambda:\n"
                                          << lambda;
@@ -107,9 +114,10 @@ TEST_F(KinematicTest, TestEstimateMu)
   phi_dot = VectorXd(4);
   phi_dot << theta_dot * 1.0 / chassis->r_[0], -theta_dot * std::sqrt(5.0) / chassis->r_[1],
       -theta_dot * 3.0 / chassis->r_[2], -theta_dot * std::sqrt(5.0) / chassis->r_[3];
+  beta << 0, M_PI/2 - std::atan(2), 0, M_PI/2 - std::atan(2);
   // theta_dot = mu * w  Controller paper eq(2)
   expected = theta_dot / lambda[2];
-  mu = kinematicmodel->estimateMu(lambda, phi_dot);
+  mu = kinematicmodel->estimateMu(lambda, phi_dot, beta);
   EXPECT_TRUE(abs(mu - expected) < 1e-2) << "Calculated mu: " << mu << " Expected mu " << expected << "\nLambda:\n"
                                          << lambda;
 
@@ -118,9 +126,10 @@ TEST_F(KinematicTest, TestEstimateMu)
   phi_dot = VectorXd(4);
   phi_dot << theta_dot * 1.0 / chassis->r_[0], -theta_dot * 1.0 / chassis->r_[1],
       -theta_dot * std::sqrt(5.0) / chassis->r_[2], -theta_dot * std::sqrt(5.0) / chassis->r_[3];
+  beta << M_PI/2, M_PI/2, M_PI/2-atan(2), M_PI/2 - atan(2);
   // theta_dot = mu * w  Controller paper eq(2)
   expected = theta_dot / lambda[2];
-  mu = kinematicmodel->estimateMu(lambda, phi_dot);
+  mu = kinematicmodel->estimateMu(lambda, phi_dot, beta);
   EXPECT_TRUE(abs(mu - expected) < 1e-2) << "Calculated mu: " << mu << " Expected mu " << expected << "\nLambda:\n"
                                          << lambda;
 
@@ -128,8 +137,9 @@ TEST_F(KinematicTest, TestEstimateMu)
   double x_dot = 1.0;        // m / s
   phi_dot = VectorXd(4);
   phi_dot << x_dot / chassis->r_[0], x_dot / chassis->r_[1], -x_dot / chassis->r_[2], -x_dot / chassis->r_[3];
+  beta << M_PI/2, 0, M_PI/2, 0;
   expected = x_dot;
-  mu = kinematicmodel->estimateMu(lambda, phi_dot);
+  mu = kinematicmodel->estimateMu(lambda, phi_dot, beta);
   EXPECT_TRUE(abs(mu - expected) < 1e-2) << "Calculated mu: " << mu << " Expected mu " << expected << "\nLambda:\n"
                                          << lambda;
 }
@@ -137,19 +147,22 @@ TEST_F(KinematicTest, TestEstimateMu)
 TEST_F(KinematicTest, TestCalculateMuLimits)
 {
   Lambda lambda{ 0, 0, 1 };
-  auto limits = kinematicmodel->muLimits(lambda);
+  auto beta = chassis->betas(lambda);
+  auto limits = kinematicmodel->muLimits(lambda, beta);
   EXPECT_GT(limits.second, limits.first);
   EXPECT_NEAR(limits.first, -5., 1e-2);
   EXPECT_NEAR(limits.second, 5., 1e-2);
 
   lambda = { 0, 1, 0 };  // Drive forward
-  limits = kinematicmodel->muLimits(lambda);
+  beta = chassis->betas(lambda);
+  limits = kinematicmodel->muLimits(lambda, beta);
   EXPECT_GT(limits.second, limits.first);
   EXPECT_NEAR(limits.first, -5., 1e-2);
   EXPECT_NEAR(limits.second, 5., 1e-2);
 
   lambda = { 0, -1, 0 };  // Drive forward
-  limits = kinematicmodel->muLimits(lambda);
+  beta = chassis->betas(lambda);
+  limits = kinematicmodel->muLimits(lambda, beta);
   EXPECT_GT(limits.second, limits.first);
   EXPECT_NEAR(limits.first, -5., 1e-2);
   EXPECT_NEAR(limits.second, 5., 1e-2);

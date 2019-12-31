@@ -80,7 +80,7 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
     return control;
   }
 
-  double mu_estimated = kinematic_model_->estimateMu(lambda_estimated, phi_dot_);
+  double mu_estimated = kinematic_model_->estimateMu(lambda_estimated, phi_dot_, beta_);
   chassis_.xi_ = kinematic_model_->computeOdometry(lambda_estimated, mu_estimated, dt_);
 
   if (chassis_.state_ == Chassis::STOPPING)
@@ -99,11 +99,11 @@ vector<ModuleState> Controller::controlStep(double x_dot, double y_dot, double t
   while (backtrack)
   {
     auto derivs = kinematic_model_->computeChassisMotion(lambda_desired, mu_desired, lambda_estimated, mu_estimated,
-                                                         k_backtrack, k_lambda, k_mu);
+                                                         k_backtrack, k_lambda, k_mu, beta_);
     Lambda lambda_dot = derivs.first.head(3);
     double mu_dot = derivs.first(3);
     Lambda lambda_2dot = derivs.second;
-    motion = kinematic_model_->computeActuatorMotion(lambda_estimated, lambda_dot, lambda_2dot, mu_estimated, mu_dot);
+    motion = kinematic_model_->computeActuatorMotion(lambda_estimated, lambda_dot, lambda_2dot, mu_estimated, mu_dot, beta_);
 
     auto bounds = time_scaler_->computeScalingBounds(motion);
     s_dot = bounds.first;
