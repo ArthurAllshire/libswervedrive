@@ -5,6 +5,8 @@ import numpy as np
 from pyswervedrive import Chassis, Controller
 
 from collections import namedtuple
+from networktables import NetworkTables
+
 SwerveConfig = namedtuple("SwerveConfig", ["alpha", "l", "r"])
 
 
@@ -50,6 +52,9 @@ class SwerveModule:
         # zero the sensor
         self.steer_motor.setSelectedSensorPosition(0, self.kPIDLoopIdx, self.kTimeoutMs)
 
+        self.talon_speed = 0.
+        self.mod_angle = 0.
+
     def drive(self, speed, angle):
         self.speed = speed
         self.angle = angle
@@ -67,7 +72,7 @@ class SwerveModule:
         return beta+math.pi/2+self.config.alpha
 
     def execute(self):
-        talon_speed = self.speed / 3.0
+        self.talon_speed = self.speed / 3.0
         # 4096 counts per revolution
         current_counts = self.steer_motor.getQuadraturePosition()
         current_angle = self.getAngle()
@@ -79,10 +84,10 @@ class SwerveModule:
             chosen = delta_flipped
         counts = current_counts + int(chosen / (2.0*math.pi) * 4096)
         mod_counts = counts % 4096
-        mod_angle = mod_counts / 4096.0 * 2.0 * math.pi
-        if abs(self.bound(mod_angle - self.angle)) > 0.1:
-            talon_speed = -talon_speed
-        self.drive_motor.set(talon_speed)
+        self.mod_angle = mod_counts / 4096.0 * 2.0 * math.pi
+        if abs(self.bound(self.mod_angle - self.angle)) > 0.1:
+            self.talon_speed = -self.talon_speed
+        self.drive_motor.set(self.talon_speed)
         self.steer_motor.set(WPI_TalonSRX.ControlMode.Position, counts)
 
 class SwerveChassis:
@@ -98,11 +103,15 @@ class SwerveChassis:
 
     def setup(self):
         self.modules = [self.lr_swerve, self.rr_swerve, self.lf_swerve, self.rf_swerve]
+        self.names = ["lr", "rr", "lf", "rf"]
         alpha = np.array([module.config.alpha for module in self.modules])
         l = np.array([module.config.l for module in self.modules])
         r = np.array([module.config.r for module in self.modules])
         self.icr_chassis = Chassis(alpha, l, r)
         self.controller = Controller(self.icr_chassis)
+
+        NetworkTables.initialize()
+        self.sd = NetworkTables.getTable("SmartDashboard")
 
     def drive(self, vx, vy, vz):
         for module in self.modules:
@@ -126,7 +135,7 @@ class SwerveChassis:
             print("Command: vx %s vy %s vz %s" % (self.vx, self.vy, self.vz))
             controls = self.controller.controlStep(self.vx, self.vy, self.vz)
             print()
-            for c, m in zip(controls, self.modules):
+            for c, m, name in zip(controls, self.modules, self.names):
                 print("speed: %f" % c[1])
                 print("beta: %f" % math.degrees(c[0]))
                 print("angle: %f" % math.degrees(m.beta2angle(c[0])))
@@ -136,4 +145,8 @@ class SwerveChassis:
                 m.drive(-c[1]*m.config.r/3.0, m.beta2angle(c[0]))
                 # -ve phi-dot creates positive spot turn, so flip drive direction for sim
                 # assume top speed of 3m/s and scale speed to +/- 1
+                self.sd.putNumber(name+"_angle", m.mod_angle)
+                self.sd.putNumber(name+"_speed", m.talon_speed)
+                self.sd.putNumber(name+"_alpha", m.config.alpha)
+                self.sd.putNumber(name+"_l", m.config.l)
             print("state:", self.icr_chassis.state)
