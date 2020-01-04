@@ -77,16 +77,17 @@ class SwerveModule:
         current_counts = self.steer_motor.getQuadraturePosition()
         current_angle = self.getAngle()
         delta = self.bound(self.angle - current_angle)
-        delta_flipped = self.bound(self.angle - current_angle + math.pi)
-        if abs(delta) < abs(delta_flipped):
-            chosen = delta
-        else:
-            chosen = delta_flipped
+        chosen = delta
+        # delta_flipped = self.bound(self.angle - current_angle + math.pi)
+        # if abs(delta) < abs(delta_flipped):
+        #     chosen = delta
+        # else:
+        #     chosen = delta_flipped
         counts = current_counts + int(chosen / (2.0*math.pi) * 4096)
         mod_counts = counts % 4096
         self.mod_angle = mod_counts / 4096.0 * 2.0 * math.pi
-        if abs(self.bound(self.mod_angle - self.angle)) > 0.1:
-            self.talon_speed = -self.talon_speed
+        # if abs(self.bound(self.mod_angle - self.angle)) > 0.1:
+        #     self.talon_speed = -self.talon_speed
         self.drive_motor.set(self.talon_speed)
         self.steer_motor.set(WPI_TalonSRX.ControlMode.Position, counts)
 
